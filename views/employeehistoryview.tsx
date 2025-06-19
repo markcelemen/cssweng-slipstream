@@ -55,15 +55,16 @@ const employeeData = [
 
 const EmployeeHistory = () => {
   return (
-    <Box display="flex" minH="100vh" overflowX="auto">
+    <Box display="flex" minH="100vh">
 	{/* Left panel */}
-	/////////////////////////////// 	EXPERIMENT WITH WIDTH AND MIN WIDTH
-      <Box flex="1" minW="992px" width="1154px" overflow="auto" borderRight="1px solid black">
-        <Box minH="100vh" p="2" bg="#FAF6C7"> // check where the bg is supposed to go
+		{ /* 	EXPERIMENT WITH WIDTH AND MIN WIDTH */ }
+      <Box flex="1" minW="80vw" maxW="90vw" overflow="auto" borderRight="1px solid black">
+        <Box minH="100vh" pr="2"> { /* check where the bg is supposed to go */ }
           <Table
             variant="unstyled"
             size="sm"
             style={{ border: "1px solid black", borderCollapse: "collapse" }}
+			
           >
             <Thead bg="#A4B465" position="sticky" top={0} zIndex={1}>
               <Tr>
@@ -84,25 +85,26 @@ const EmployeeHistory = () => {
 							 padding: "4px",
 							 borderBottom: "1px solid black"
 					}}
+					textAlign="center"
                   >
                     {header}
                   </Th>
                 ))}
               </Tr>
             </Thead>
-			<Tbody bg="#FBFCE5">
+			<Tbody bg="#FEFAE0">
             {employeeData.map((emp, index) => (
               <Tr key={index} bg="rgba(255, 255, 255, 0.25)">
-                <Td>{emp.name}</Td>
-                <Td>{emp.id}</Td>
-                <Td>{emp.position}</Td>
-                <Td>{emp.totalSalary}</Td>
-                <Td>{emp.basicSalary}</Td>
-                <Td>{emp.department}</Td>
-                <Td>{emp.coordinator}</Td>
-                <Td>{emp.term}</Td>
-                <Td>{emp.remark}</Td>
-                <Td>
+                <Td textAlign="center">{emp.name}</Td>
+                <Td textAlign="center">{emp.id}</Td>
+                <Td textAlign="center">{emp.position}</Td>
+                <Td textAlign="center">{emp.totalSalary}</Td>
+                <Td textAlign="center">{emp.basicSalary}</Td>
+                <Td textAlign="center">{emp.department}</Td>
+                <Td textAlign="center">{emp.coordinator}</Td>
+                <Td textAlign="center">{emp.term}</Td>
+                <Td textAlign="center">{emp.remark}</Td>
+                <Td textAlign="center">
                   <IconButton
                     icon={<EditIcon />}
                     aria-label="Edit"
@@ -127,13 +129,14 @@ const EmployeeHistory = () => {
 	  
 	{/* Right Panel */}
       <Box
-        minW="286px"
-        width="286px"
-        display={{ base: "none", md: "flex" }}
+		minW="10vw"
+        maxW="20vw"
+        display={{ base: "none", md: "flex" }} 
         flexDirection="column"
+		 minH="100vh" bg="#A4B465"
       >
-		<Box overflow="auto" minH="100vh">
-			<Table variant="simple" size="sm" border="1px solid black">
+		<Box>
+			<Table variant="unstyled" size="sm" border="1px solid black">
 				<Thead bg="#626F47" position="sticky" top={0} zIndex={1}>
 					<Tr>
 						<Th
@@ -141,18 +144,22 @@ const EmployeeHistory = () => {
 							padding: "4px",
 							borderBottom: "1px solid black",
 						  }}
+						  color="white"
+						  textAlign="center"
 						>
-						////////////////////////////////////////////////////////////// HISTORY PLUS HISTORY SYMBOL
+						HISTORY
+						{ /* HISTORY PLUS HISTORY SYMBOL */ }
 						</Th>
 					</Tr>
 				</Thead>
 				<Tbody bg="#FBFCE5">
-					{employeeData.map((emp, index) => (
-						<Tr key={index} bg="rgba(255, 255, 255, 0.25)">
-							<Td>{emp.name}</Td>
-							<Td>{emp.remark}</Td>
-						</Tr>
-					))}
+					<Tr>
+						<Td> user name - Mm/Dd/yyYY </Td>
+					</Tr><Tr>
+						<Td> user name - Mm/Dd/yyYY </Td>
+					</Tr><Tr>
+						<Td> user name - Mm/Dd/yyYY </Td>
+					</Tr>
 				</Tbody>
 			</Table>
 		</Box>
