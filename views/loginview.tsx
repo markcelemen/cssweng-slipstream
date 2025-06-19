@@ -97,6 +97,20 @@ const Login = () => {
               fontWeight="bold"
               _hover={{ opacity: 0.9 }}
               mt={2}
+              onClick={() => {
+              const testEmail = "123";
+              const testPassword = "123";
+
+              const emailInput = document.querySelector("input[placeholder='email']") as HTMLInputElement;
+              const passwordInput = document.querySelector("input[placeholder='password']") as HTMLInputElement;
+
+              if (emailInput?.value === testEmail && passwordInput?.value === testPassword) {
+                alert("Login successful!");
+                // You can redirect or update context here
+              } else {
+                alert("Invalid email or password");
+            }
+         }}
             >
               LOGIN
             </Button>
