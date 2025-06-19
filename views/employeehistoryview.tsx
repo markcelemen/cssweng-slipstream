@@ -1,5 +1,5 @@
 
-import { Box, Table, Thead, Tbody, Tr, Th, Td } from "@chakra-ui/react";
+import { Box, Table, Thead, Tbody, Tr, Th, Td, IconButton } from "@chakra-ui/react";
 import { AddIcon, EditIcon } from "@chakra-ui/icons";
 
 const employeeData = [
