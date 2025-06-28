@@ -43,4 +43,4 @@ const deductionsSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('dDeductions', deductionsSchema);
+module.exports = mongoose.model('Deductions', deductionsSchema);
