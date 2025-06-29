@@ -3,50 +3,71 @@ import { Box, Table, Thead, Tbody, Tr, Th, Td, IconButton } from "@chakra-ui/rea
 import { AddIcon, EditIcon } from "@chakra-ui/icons";
 
 const employeeData = [
-	{
-		name: "Juanito Dela Cruz",
-		id: "121111111",
-		position: "teacher",
-		totalSalary: "20,000",
-		basicSalary: "20,000",
-		department: "teaching",
-		coordinator: "guy",
-		term: "7",
-		remark: "cool guy",
-	},
-	{
-		name: "john mark padilla",
-		id: "121111111",
-		position: "teacher",
-		totalSalary: "20,000",
-		basicSalary: "20,000",
-		department: "teaching",
-		coordinator: "guy",
-		term: "7",
-		remark: "cool guy",
-	},
-	{
-		name: "juanita dela czutia",
-		id: "121111111",
-		position: "teacher",
-		totalSalary: "20,000",
-		basicSalary: "20,000",
-		department: "teaching",
-		coordinator: "guy",
-		term: "4",
-		remark: "cool guy",
-	},
-	{
-		name: "Jon Jones Joestar",
-		id: "121111111",
-		position: "teacher",
-		totalSalary: "20,000",
-		basicSalary: "20,000",
-		department: "teaching",
-		coordinator: "guy",
-		term: "7",
-		remark: "cool guy",
-	},
+  {
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
+  },
+  {
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
+  },
+  {
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
+  },
+  {
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
+  },
 ];
 
 	
@@ -68,16 +89,19 @@ const EmployeeHistory = () => {
           >
             <Thead bg="#A4B465" position="sticky" top={0} zIndex={1}>
               <Tr>
-                {["Name",
-				  "Employee ID",
+                {["",
+				  "Last Name",
+				  "First Name",
+				  "Middle Name",
+				  "Department",
+				  "Coordinator",
 				  "Position",
 				  "Total Salary",
 				  "Basic Salary",
-				  "Department",
-				  "Coordinator",
-				  "Term",
-				  "Remarks",
-				  ""
+				  "Contact Number",
+				  "Employee ID",
+				  "Email",
+				  "Placeholder"
 				  ].map((header, i) => (
                   <Th
                     key={i}
@@ -86,6 +110,7 @@ const EmployeeHistory = () => {
 							 borderBottom: "1px solid black"
 					}}
 					textAlign="center"
+					fontSize="9px"
                   >
                     {header}
                   </Th>
@@ -95,27 +120,29 @@ const EmployeeHistory = () => {
 			<Tbody bg="#FEFAE0">
             {employeeData.map((emp, index) => (
               <Tr key={index} bg="rgba(255, 255, 255, 0.25)">
-                <Td textAlign="center">{emp.name}</Td>
-                <Td textAlign="center">{emp.id}</Td>
-                <Td textAlign="center">{emp.position}</Td>
-                <Td textAlign="center">{emp.totalSalary}</Td>
-                <Td textAlign="center">{emp.basicSalary}</Td>
-                <Td textAlign="center">{emp.department}</Td>
-                <Td textAlign="center">{emp.coordinator}</Td>
-                <Td textAlign="center">{emp.term}</Td>
-                <Td textAlign="center">{emp.remark}</Td>
+				<Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{index + 1}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.lastName}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.firstName}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.middleName}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.department}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.coordinator}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.position}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.totalSalary}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.basicSalary}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.contactNumber}</Td>
+				<Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.employeeId}</Td>
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.email}</Td>
                 <Td textAlign="center">
                   <IconButton
                     icon={<EditIcon />}
                     aria-label="Edit"
                     variant="ghost"
-                    border="2px solid #626F47"
                     bg="#FEFAE0"
                     color="#626F47"
-                    height="50px"
-                    width="50px"
-                    fontWeight="bold"
-                    _hover={{ bg: "#626F47", color: "#FEFAE0" }}
+                    height="15px"
+                    width="15px"
+                    _hover={{ bg: "#626F47", color: "#FEFAE0", height: "15px", width: "15px" }}
+					p="0px 10px 0px 10px"
                   />
                 </Td>
               </Tr>
@@ -146,6 +173,7 @@ const EmployeeHistory = () => {
 						  }}
 						  color="white"
 						  textAlign="center"
+						  fontSize="10px"
 						>
 						HISTORY
 						{ /* HISTORY PLUS HISTORY SYMBOL */ }
@@ -154,11 +182,40 @@ const EmployeeHistory = () => {
 				</Thead>
 				<Tbody bg="#FBFCE5">
 					<Tr>
-						<Td> user name - Mm/Dd/yyYY </Td>
+						<Td
+						p="2px 10px 2px 10px"
+						fontSize="11px"
+						textAlign="center"
+						_hover={{bg: "#DBFB95"}}
+						cursor="pointer"> user name - Mm/Dd/yyYY 00:00:00</Td>
 					</Tr><Tr>
-						<Td> user name - Mm/Dd/yyYY </Td>
+						<Td
+						p="2px 10px 2px 10px"
+						fontSize="11px"
+						textAlign="center"
+						_hover={{bg: "#DBFB95"}}
+						cursor="pointer"> user name - Mm/Dd/yyYY 00:00:00</Td>
 					</Tr><Tr>
-						<Td> user name - Mm/Dd/yyYY </Td>
+						<Td
+						p="2px 10px 2px 10px"
+						fontSize="11px"
+						textAlign="center"
+						_hover={{bg: "#DBFB95"}}
+						cursor="pointer"> user name - Mm/Dd/yyYY 00:00:00</Td>
+					</Tr><Tr>
+						<Td
+						p="2px 10px 2px 10px"
+						fontSize="11px"
+						textAlign="center"
+						_hover={{bg: "#DBFB95"}}
+						cursor="pointer"> user name - Mm/Dd/yyYY 00:00:00</Td>
+					</Tr><Tr>
+						<Td
+						p="2px 10px 2px 10px"
+						fontSize="11px"
+						textAlign="center"
+						_hover={{bg: "#DBFB95"}}
+						cursor="pointer"> user name - Mm/Dd/yyYY 00:00:00</Td>
 					</Tr>
 				</Tbody>
 			</Table>
