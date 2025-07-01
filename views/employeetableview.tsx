@@ -15,60 +15,530 @@ import { AddIcon, EditIcon } from "@chakra-ui/icons";
 /* SAMPLE EMPLOYEE DATA */
 const employeeData = [
   {
-    name: "Juanito Dela Cruz",
-    id: "121111111",
-    position: "teacher",
-    totalSalary: "20,000",
-    basicSalary: "20,000",
-    department: "teaching",
-    coordinator: "guy",
-    term: "7",
-    email: "ada",
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
   },
   {
-    name: "john mark padilla",
-    id: "121111111",
-    position: "teacher",
-    totalSalary: "20,000",
-    basicSalary: "20,000",
-    department: "teaching",
-    coordinator: "guy",
-    term: "7",
-    email: "cool ada",
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
   },
   {
-    name: "juanita dela czuTIA",
-    id: "121111111",
-    position: "teacher",
-    totalSalary: "20,000",
-    basicSalary: "20,000",
-    department: "teaching",
-    coordinator: "guy",
-    term: "7",
-    email: "ad guy",
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
   },
   {
-    name: "Jon Jones Joestar",
-    id: "121111111",
-    position: "teacher",
-    totalSalary: "20,000",
-    basicSalary: "20,000",
-    department: "teaching",
-    coordinator: "guy",
-    term: "7",
-    email: "coadaol guy",
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
+  },
+  {
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
+  },
+  {
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
+  },
+  {
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
+  },
+  {
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
+  },
+  {
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
+  },
+  {
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
+  },
+  {
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
+  },
+  {
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
+  },
+  {
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
+  },
+  {
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
+  },
+  {
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
+  },
+  {
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
+  },{
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
+  },
+  {
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
+  },
+  {
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
+  },
+  {
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
+  },{
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
+  },
+  {
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
+  },
+  {
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
+  },
+  {
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
+  },{
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
+  },
+  {
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
+  },
+  {
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
+  },
+  {
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
+  },{
+    lastName: "Dela Cruz",
+    firstName: "John",
+    middleName: "Jacob",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Manager",
+    totalSalary: 30000,
+    basicSalary: 25000,
+    contactNumber: "09291834893",
+    employeeId: "890093814",
+    email: "karlkiegokarlkiego@gmail.com"
+  },
+  {
+    lastName: "Delanye",
+    firstName: "West",
+    middleName: "Kardashian",
+    department: "Maintenance",
+    coordinator: "Joe Pesci",
+    position: "Janitor",
+    totalSalary: 15000,
+    basicSalary: 10000,
+    contactNumber: "09159612345",
+    employeeId: "82341568",
+    email: "john_rovere_iralil@dlsu.edu.ph"
+  },
+  {
+    lastName: "Englishera",
+    firstName: "Elany",
+    middleName: "Eros",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 20000,
+    basicSalary: 18000,
+    contactNumber: "09415962345",
+    employeeId: "82341568",
+    email: "ireallylovemydog@gmail.com"
+  },
+  {
+    lastName: "Eash",
+    firstName: "Maya",
+    middleName: "Ash",
+    department: "Teaching",
+    coordinator: "Keyshia Cole",
+    position: "Teacher",
+    totalSalary: 21000,
+    basicSalary: 18000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "IhaveHemorrhoids@gmail.com"
+  },
+  {
+    lastName: "Franco",
+    firstName: "Philip",
+    middleName: "De",
+    department: "Human Resources",
+    coordinator: "Cloud Strife",
+    position: "Recruiter",
+    totalSalary: 25000,
+    basicSalary: 20000,
+    contactNumber: "09191622346",
+    employeeId: "82341568",
+    email: "catsaresupercute@gmail.com"
   },
 ];
 
-const EmployeeTable = () => {
+const EmployeeTableV1 = () => {
   return (
-    <Box
-      bg="#FAF6C7"
+    {/*<Box
       minHeight="100vh"
       p={6}
       position="relative"
       fontFamily="'Inter', sans-serif"
-      backgroundImage="url('/rainbow.png')"
       backgroundRepeat="no-repeat"
       backgroundSize="cover"
       backgroundPosition="center"
@@ -187,6 +657,106 @@ const EmployeeTable = () => {
           />
         </Flex>
       </Flex>
+    </Box>*/}
+    
+      
+    
+  );
+};
+
+const EmployeeTable = () => {
+  return (
+    <Box flex="1"
+         minW="80vw"
+         maxW="100vw"
+         overflow={"auto"}
+         >
+      <Box minH="100vh" > { /* was experimenting for scroll, now i dont want to remove this wrapper*/ }
+        <Table variant="unstyled"
+               size="sm"
+               style={{ border: "1px solid black", borderCollapse: "collapse" }}
+               sx={{ "tbody tr:nth-of-type(odd)": { background: "#E6E2B1", },
+                     "tbody tr:nth-of-type(even)": { background: "#FBFCE5", }, }}
+                     >
+          <Thead bg="#A4B465" position="sticky" top={0} zIndex={1}>
+            <Tr>
+              {["",
+                "Last Name",
+                "First Name",
+                "Middle Name",
+                "Department",
+                "Coordinator",
+                "Position",
+                "Total Salary",
+                "Basic Salary",
+                "Contact Number",
+                "Employee ID",
+              ].map((header, i) => (
+                <Th key={i}
+                    style={{ border: "none",
+                    padding: "4px",
+                    borderBottom: "1px solid black"
+                    }}
+                    textAlign="center"
+                    fontSize="9px"
+                    >
+                      {header}
+                </Th>
+              ))}
+              <Th style={{ border: "none", padding: "4px", borderBottom: "1px solid black" }}
+                  textAlign="center"
+                  fontSize="9px"
+                  >
+                <Box style={{display: "flex", justifyContent: "space-around"}}>
+                  Email
+                  <Button bg="#FFCF50"
+                          color="#626F47"
+                          borderRadius="5px"
+                          fontSize="9px"
+                          h="15px"
+                          p="7px"
+                          _hover={{ bg: "#8B6A16", color: "#FFD566"}}
+                          >
+                    {/* Idk what hover color should look like */ }
+                    Send Payslips to Email
+                  </Button>
+                </Box>
+              </Th>
+            </Tr>
+          </Thead>
+          <Tbody bg="#FEFAE0">
+            {employeeData.map((emp, index) => (
+              <Tr key={index} bg="rgba(255, 255, 255, 0.25)">
+                <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{index + 1}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.lastName}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.firstName}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.middleName}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.department}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.coordinator}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.position}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.totalSalary}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.basicSalary}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.contactNumber}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">{emp.employeeId}</Td>
+                  <Td textAlign="center" fontSize="10px" p="0px 10px 0px 10px">
+                  <Box style={{display: "flex", justifyContent: "space-between"}}>
+                    {emp.email}
+                    <IconButton icon={<EditIcon />}
+                                aria-label="Edit"
+                                variant="ghost"
+                                color="#626F47"
+                                height="12px"
+                                width="12px"
+                                size="xs"
+                              _hover={{ bg: "#626F47", color: "#FEFAE0" }}
+                                p="0px 10px 0px 10px"/>
+                  </Box>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
     </Box>
   );
 };

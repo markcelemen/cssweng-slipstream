@@ -1,8 +1,15 @@
 import EmployeeHistory from "../../views/employeehistoryview";
-
+import EmployeeTable from "../../views/employeetableview";
+import HistoryTab from "../../views/employeehistoryview";
+import { Box } from "@chakra-ui/react/box";
 
 const EmployeeHistoryPage = () => {
-  return <EmployeeHistory />;
+  return (
+    <Box display="flex" minH="100vh" maxH="100vh">
+      <EmployeeTable/>
+      <HistoryTab />
+    </Box>
+  );
 };
 
 export default EmployeeHistoryPage;
