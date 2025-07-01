@@ -670,8 +670,16 @@ const EmployeeTable = () => {
          minW="80vw"
          maxW="100vw"
          overflow={"auto"}
-         >
-      <Box minH="100vh" > { /* was experimenting for scroll, now i dont want to remove this wrapper*/ }
+         sx={{ "&::-webkit-scrollbar": { width: "8px", height: "8px" },
+               "&::-webkit-scrollbar-thumb": { backgroundColor: "#48630E",
+                                               borderRadius: "8px",
+                                               border: "0px solid black"
+                                             },
+               "&::-webkit-scrollbar-track": { background: "transparent" },
+            }}
+         pr="4px"
+         pb="4px">
+      <Box> { /* was experimenting for scroll, now i dont want to remove this wrapper*/ }
         <Table variant="unstyled"
                size="sm"
                style={{ border: "1px solid black", borderCollapse: "collapse" }}
@@ -693,17 +701,14 @@ const EmployeeTable = () => {
                 "Employee ID",
               ].map((header, i) => (
                 <Th key={i}
-                    style={{ border: "none",
-                    padding: "4px",
-                    borderBottom: "1px solid black"
-                    }}
+                    p="4px"
                     textAlign="center"
                     fontSize="9px"
                     >
                       {header}
                 </Th>
               ))}
-              <Th style={{ border: "none", padding: "4px", borderBottom: "1px solid black" }}
+              <Th p="4px"
                   textAlign="center"
                   fontSize="9px"
                   >

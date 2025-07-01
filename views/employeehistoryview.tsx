@@ -4,15 +4,26 @@ import { EditIcon, RepeatClockIcon } from "@chakra-ui/icons";
 
 const EmployeeHistoryTab = () => {
   return (
+    <Box overflow="auto"
+         sx={{ "&::-webkit-scrollbar": { width: "8px", height: "8px" },
+               "&::-webkit-scrollbar-thumb": { backgroundColor: "#48630E",
+                                               borderRadius: "8px",
+                                               border: "0px solid black"
+                                             },
+               "&::-webkit-scrollbar-track": { background: "transparent" },
+            }}
+          pr="4px"
+          pb="4px">
     <Box minW="10vw"
          maxW="20vw"
          display="flex" 
          flexDirection="column"
-		     minH="100vh"
+		     minH="99vh"
          bg="#A4B465"
          border="1px solid black"
-         overflow="auto"
-         ml="2">
+         ml="2"
+         >
+          { /* 100vh enables the scrollbar for some reason, so 99 it is */ }
 		  <Table variant="unstyled" size="sm">
 				<Thead bg="#626F47" position="sticky" top={0} zIndex={1}>
 					<Tr>
@@ -315,6 +326,7 @@ const EmployeeHistoryTab = () => {
 				</Tbody>
 			</Table>
 		</Box>
+    </Box>
   );
 }
 
