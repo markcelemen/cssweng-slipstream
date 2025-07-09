@@ -272,7 +272,7 @@ const EmployeeTable = () => {
   // --- RENDER ---
   return (
     
-    <Box minH="90vh" display="flex" flexDirection="column" justifyContent="space-between" ref={outerWrapperRef}>
+    <Box minH="100vh" width="100vw" display="flex" flexDirection="column" justifyContent="space-between" ref={outerWrapperRef}>
       <Box className="employee-table-container">
         <Flex align="center" gap="2" mb={2}>
           <Button
@@ -283,11 +283,10 @@ const EmployeeTable = () => {
             fontWeight="bold"
             fontSize="md"
             borderRadius="xl"
-            boxShadow="0px 8px 24px 0px #00000030"
+            boxShadow="2px 2px 2px 0px #00000030"
             _hover={{
               bg: "#E6E2B1",
               color: "#626F47",
-              boxShadow: "0px 12px 32px 0px #00000026"
             }}
             px={6}
             py={3}
@@ -328,7 +327,7 @@ const EmployeeTable = () => {
               position="relative"
                overflowX="auto"
         >
-          <Table variant="unstyled" size="sm"   className="employee-table-container">
+          <Table variant="unstyled" size="sm"   className="employee-table-bordered">
             <Thead bg="#A4B465" position="sticky" top={0} zIndex={1} h="50px">
               <Tr>
                 {[
@@ -382,7 +381,7 @@ const EmployeeTable = () => {
                 return (
                   <Tr
                     key={globalIdx}
-                    bg={isSelected ? "#FFD566" : globalIdx % 2 ? "#E6E2B1" : "#FBFCE5"}
+                    bg={isSelected ? "rgba(255, 213, 102, 0.97)" : globalIdx % 2 ? "rgba(230, 226, 177, 0.93)" :"rgba(251, 252, 229, 0.93)"}
                     style={{
                       cursor: "pointer",
                       fontWeight: isSelected ? "bold" : "normal",
