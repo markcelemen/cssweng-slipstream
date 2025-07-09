@@ -19,7 +19,7 @@ interface GlogEntry {
   position: string;
   name: string;
   username: string;
-  date: string;
+  date: Date;
   time: string;
   late: string;
   lateDeduct: string;
@@ -61,7 +61,15 @@ const CsvViewer: React.FC = () => {
         const rows = raw.slice(1).map((row) => {
           const entry: Partial<GlogEntry> = {};
           headers.forEach((key, i) => {
-            entry[key as keyof GlogEntry] = row[i] ?? "";
+            if (key === "date"){
+              // Convert date string to Date object
+              const dateStr = row[i] + " " + row[i + 1]; // Combine date and time
+              const parsed = dateStr ? new Date(dateStr) : null;
+              entry[key as keyof GlogEntry] = parsed as any;
+            }
+            else {
+                (entry as any)[key] = row[i] ?? "";
+            }
           });
           return entry as GlogEntry;
         });
@@ -85,7 +93,7 @@ const CsvViewer: React.FC = () => {
               <Th fontSize="9px" textAlign="center">Name</Th>
               <Th fontSize="9px" textAlign="center">Username</Th>
               <Th fontSize="9px" textAlign="center">Date</Th>
-              <Th fontSize="9px" textAlign="center">Time</Th>
+              {/* <Th fontSize="9px" textAlign="center">Time</Th> */}
               <Th fontSize="9px" textAlign="center">Late</Th>
               <Th fontSize="9px" textAlign="center">Late Deduct</Th>
               <Th fontSize="9px" textAlign="center">Irregular</Th>
@@ -102,8 +110,10 @@ const CsvViewer: React.FC = () => {
                 <Td fontSize="10px" textAlign="center">{entry.position}</Td>
                 <Td fontSize="10px" textAlign="center">{entry.name}</Td>
                 <Td fontSize="10px" textAlign="center">{entry.username}</Td>
-                <Td fontSize="10px" textAlign="center">{entry.date}</Td>
-                <Td fontSize="10px" textAlign="center">{entry.time}</Td>
+                <Td fontSize="10px" textAlign="center">
+                    {entry.date instanceof Date && !isNaN(entry.date.getTime())
+                    ? entry.date.toLocaleString() : "Invalid Date"}</Td>
+                {/* <Td fontSize="10px" textAlign="center">{entry.time}</Td> */}
                 <Td fontSize="10px" textAlign="center">{entry.late}</Td>
                 <Td fontSize="10px" textAlign="center">{entry.lateDeduct}</Td>
                 <Td fontSize="10px" textAlign="center">{entry.irregular}</Td>
