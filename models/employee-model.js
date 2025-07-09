@@ -34,16 +34,6 @@ const employeeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    totalSalary: {
-        type: Number, // will change this to basic salary + earnings soon
-        default: 0,
-        required: true
-    },
-    basicSalary: {
-        type: Number, // will change this to earnings reference
-        default: 0,
-        required: true
-    },
     contactInfo: {
         type: String,
         default: '09123456789',
