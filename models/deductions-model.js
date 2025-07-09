@@ -34,12 +34,24 @@ const deductionsSchema = new mongoose.Schema({
         default: 0
     },
     otherDeduct: {
-        type: Number,
-        default: 0
+        value: {
+            type: Number,
+            default: 0
+        },
+        isAdded: {
+            type: Boolean,
+            default: false
+        }
     },
     otherRecur: {
-        type: Number,
-        default: 0
+        value: {
+            type: Number,
+            default: 0
+        },
+        isAdded: {
+            type: Boolean,
+            default: false
+        }
     }
 });
 
