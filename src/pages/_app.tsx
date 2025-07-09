@@ -1,4 +1,7 @@
 import "@/styles/globals.css";
+import "@/styles/employee-info-global.css"
+import "@/styles/employee-information.css"
+import "@/styles/employee-profile.css"
 import type { AppProps } from "next/app";
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import { useRouter } from "next/router";
