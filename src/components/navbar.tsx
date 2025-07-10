@@ -72,9 +72,17 @@ const Navbar = (): JSX.Element => {
         </div>
 
         <div className={styles.logoutAndHelp}>
-          <button className={styles.logoutBtn}>
+          <button className={styles.logoutBtn} onClick={() => alert("Logout pressed")}>
+             
+
             <div className={styles.textWrapper}>Logout</div>
           </button>
+
+           <button
+            className={styles.helpBtn}
+            onClick={() => alert("Help is pressed")}
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+          >
           <Image
             className={styles.vector}
             alt="Vector"
@@ -82,6 +90,7 @@ const Navbar = (): JSX.Element => {
             width={25}
             height={25}
           />
+          </button>
         </div>
       </div>
 
