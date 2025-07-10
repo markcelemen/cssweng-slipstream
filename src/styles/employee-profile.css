@@ -125,11 +125,26 @@
 
     display: flex;
     align-items: center;
-    gap: 60px;
+    justify-content: space-between;
+
 }
 
-.Arrow-Button {
+.Arrow-Left-Button {
+    background-color: transparent;
     margin-left: 5px;
+    transform: rotate(180deg);
+    margin-bottom: 1px;
+
+    border: none;
+    cursor: pointer;
+}
+
+.Arrow-Right-Button {
+    background-color: transparent;
+    border: none;
+
+    margin-top: 5px;
+    margin-left: 30px;
 }
 
 .Current-Row-Title {
@@ -145,4 +160,5 @@
     font-weight: bold;
     font-size: 25px;
     padding-bottom: 1px;
+    padding-left: 40px;
 }
