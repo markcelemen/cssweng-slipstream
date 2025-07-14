@@ -1,5 +1,5 @@
 import EmployeeTable from "../../views/employeetableview";
-import HistoryTab from "../../views/employeehistoryview";
+/*import HistoryTab from "../../views/employeehistoryview";*/
 import { Box } from "@chakra-ui/react/box";
 
 
