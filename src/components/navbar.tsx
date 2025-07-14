@@ -1,108 +1,168 @@
-import {
-  Box,
-  Flex,
-  Text,
-  Button,
-  Image,
-  Spacer,
-} from "@chakra-ui/react";
+import React, { JSX, useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import styles from "./navbar.module.css";
 
-const Navbar = () => {
+const Navbar = (): JSX.Element => {
+  const [dateTime, setDateTime] = useState<string>("");
   const router = useRouter();
-  const [dateTime, setDateTime] = useState<{ date: string; time: string } | null>(null);
 
   useEffect(() => {
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString(undefined, {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+    const updateDateTime = () => {
+      const now = new Date();
+      const date = now.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+      const time = now.toLocaleTimeString([], {
+        hour12: true,
+      });
+      const formatted = `${date} ${time}`;
+      setDateTime(formatted);
+    };
 
-    const formattedTime = now.toLocaleTimeString(undefined, {
-      hour12: false,
-    });
-
-    setDateTime({ date: formattedDate, time: formattedTime });
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <Box boxShadow="md">
-      {/* MAIN NAVBAR */}
-      <Box
-        bg={`radial-gradient(circle at center, #FFCF50A6 0%, #FFCF50 65%)`}
-        h="140px"
-        px={6}
-      >
-        <Flex align="center" h="100%">
-          <Flex align="center" gap={4}>
+    <div className={styles.navbarFrame}>
+      <div className={styles.top}>
+        <div className={styles.logoAndName}>
+          <div className={styles.picframe}>
             <Image
-              src="/bloomfieldlogo.png"
-              alt="Bloomfield Logo"
-              height="120px"
-              objectFit="contain"
+              className={styles.bloomfieldPic}
+              alt="Bloomfield pic"
+              src="/bloomfieldlogo2.png"
+              width={118}
+              height={118}
             />
-            <Text
-              fontFamily="'Montserrat', sans-serif"
-              fontSize="60"
-              fontWeight="800"
-              color="#626F47"
-            >
-              SLIPSTREAM
-            </Text>
-          </Flex>
+          </div>
+          <div className={styles.slipstream}>SLIPSTREAM</div>
+        </div>
 
-          <Spacer />
+        <div className={styles.searchWrapper}>
+          <div className={styles.searchbar}>
+            <div className={styles.overlapGroup}>
+              <div className={styles.rectangle} />
 
-          <Button
-            onClick={() => router.push("/logout")}
-            bg="#FEFAE0"
-            color="#626F47"
-            height="50px"
-            width="100px"
-            fontWeight="bold"
-            _hover={{ bg: "#626F47", color: "#FEFAE0" }}
+              <div className={styles.inputField}>
+                <div className={styles.div} />
+              </div>
+
+              <Image
+                className={styles.searchbtn}
+                alt="Searchbtn"
+                src="/Vector.png"
+                width={45}
+                height={45}
+              />
+
+              <Image
+                className={styles.filterdropdown}
+                alt="Filterdropdown"
+                src="/Filterdropdown.png"
+                width={45}
+                height={45}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.logoutAndHelp}>
+          <button className={styles.logoutBtn} onClick={() => alert("Logout pressed")}>
+             
+
+            <div className={styles.textWrapper}>Logout</div>
+          </button>
+
+           <button
+            className={styles.helpBtn}
+            onClick={() => alert("Help is pressed")}
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
           >
-            Logout
-          </Button>
-        </Flex>
-      </Box>
+          <Image
+            className={styles.vector}
+            alt="Vector"
+            src="/Help.png"
+            width={25}
+            height={25}
+          />
+          </button>
+        </div>
+      </div>
 
-      {/* BOTTOM UTILITY BAR */}
-      <Box
-        bg="#8B6A16"
-        color="#FFD566"
-        py={1}
-        px={6}
-        fontFamily="'Inter', sans-serif"
-      >
-        <Flex justify="space-between" align="center">
-          {/* Left: Date and Time */}
-          {dateTime && (
-            <Text fontSize="sm">
-              {dateTime.date} &nbsp;&nbsp; {dateTime.time}
-            </Text>
-          )}
-
-          {/* Right: Navigation Buttons */}
-          <Flex gap={4} fontSize="sm">
-            <Text cursor="pointer" _hover={{ textDecoration: "underline" }}>
-              Earning
-            </Text>
-            <Text>||</Text>
-            <Text cursor="pointer" _hover={{ textDecoration: "underline" }}>
+      <div className={styles.bottom}>
+        <div className={styles.navigationItems}>
+          <div className={styles.frame}>
+            <button
+              className={`
+                ${styles.navButton}
+                ${styles.textWrapper2}
+                ${router.pathname === "/deductions" ? styles.active : ""}
+              `}
+              onClick={() => router.push("/deductions")}
+            >
               Deductions
-            </Text>
-            <Text>||</Text>
-            <Text cursor="pointer" _hover={{ textDecoration: "underline" }}>
-              Payslip form
-            </Text>
-          </Flex>
-        </Flex>
-      </Box>
-    </Box>
+            </button>
+          </div>
+          <div className={styles.frame}>
+            <button
+              className={`
+                ${styles.navButton}
+                ${styles.textWrapper3}
+                ${router.pathname === "/edit-history" ? styles.active : ""}
+              `}
+              onClick={() => router.push("/edit-history")}
+            >
+              Edit History
+            </button>
+          </div>
+          <div className={styles.frame}>
+            <button
+              className={`
+                ${styles.navButton}
+                ${styles.textWrapper4}
+                ${router.pathname === "/employeetable" ? styles.active : ""}
+              `}
+              onClick={() => router.push("//employeetable")}
+            >
+              Employee Overview
+            </button>
+          </div>
+          <div className={styles.frame}>
+            <button
+              className={`
+                ${styles.navButton}
+                ${styles.textWrapper5}
+                ${router.pathname === "/payslip-generator" ? styles.active : ""}
+              `}
+              onClick={() => router.push("/payslip-generator")}
+            >
+              Payslip Generator
+            </button>
+          </div>
+          <div className={styles.frame}>
+            <button
+              className={`
+                ${styles.navButton}
+                ${styles.textWrapper6}
+                ${router.pathname === "/payslip-view" ? styles.active : ""}
+              `}
+              onClick={() => router.push("/payslip-view")}
+            >
+              Payslip View
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.dateTime}>
+          <div className={styles.textWrapper7}>{dateTime}</div>
+        </div>
+      </div>
+    </div>
   );
 };
 
