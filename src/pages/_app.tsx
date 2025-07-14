@@ -1,12 +1,12 @@
-
-
+import "@/styles/employee-info-global.css"
+import "@/styles/employee-information.css"
+import "@/styles/employee-profile.css"
 import "@fontsource/inter";
-
+import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import Navbar from "../components/navbar";
-import "@/styles/globals.css";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
