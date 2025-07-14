@@ -18,6 +18,10 @@ const employeeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    birthDate: {
+        type: Date,
+        required: true
+    },
     profileImg: {
         type: String,
         default: "https://i.pinimg.com/736x/60/42/74/604274ee52daacfce753511d50f0c658.jpg"
@@ -32,16 +36,6 @@ const employeeSchema = new mongoose.Schema({
     },
     position: {
         type: String,
-        required: true
-    },
-    totalSalary: {
-        type: Number, // will change this to basic salary + earnings soon
-        default: 0,
-        required: true
-    },
-    basicSalary: {
-        type: Number, // will change this to earnings reference
-        default: 0,
         required: true
     },
     contactInfo: {
