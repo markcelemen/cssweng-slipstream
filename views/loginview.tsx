@@ -9,6 +9,7 @@ import {
   Text,
   Divider,
 } from "@chakra-ui/react";
+import router from "next/router";
 import { FcGoogle } from "react-icons/fc";
 
 const Login = () => {
@@ -106,7 +107,7 @@ const Login = () => {
 
               if (emailInput?.value === testEmail && passwordInput?.value === testPassword) {
                 alert("Login successful!");
-                // You can redirect or update context here
+                router.replace("/employeetable");
               } else {
                 alert("Invalid email or password");
             }

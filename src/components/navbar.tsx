@@ -151,7 +151,7 @@ const Navbar = (): JSX.Element => {
                 ${styles.textWrapper6}
                 ${router.pathname === "/payslip-view" ? styles.active : ""}
               `}
-              onClick={() => router.push("/payslip-view")}
+              onClick={() => router.push("/employeeemailer")}
             >
               Payslip View
             </button>
