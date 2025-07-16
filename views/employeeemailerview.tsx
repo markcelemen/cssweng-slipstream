@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Flex,
@@ -11,7 +11,110 @@ import {
 import { FaSave, FaPaperPlane } from "react-icons/fa";
 
 const EmployeeEmailer = () => {
-  const [emailAll, setEmailAll] = useState("No");
+type PDFFile = {
+  url: string;
+  name: string;
+  assignedTo?: string;
+};
+const [pdfFiles, setPdfFiles] = useState<PDFFile[]>([]);
+const [currentIndex, setCurrentIndex] = useState<number>(0);
+const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+type Employee = {
+  employeeID: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
+const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+const [employeeMap, setEmployeeMap] = useState<Map<string, Employee>>(new Map());
+const [matchedEmployees, setMatchedEmployees] = useState<EmployeeWithPDFs[]>([]);
+
+type EmployeeWithPDFs = Employee & {
+  pdfs: PDFFile[];
+};
+
+useEffect(() => {
+  const fetchEmployees = async () => {
+    const response = await fetch("/api/employees");
+    const data = await response.json();
+
+    console.log("DEBUG fetch result:", data);
+    const employees: Employee[] = Array.isArray(data) ? data : data.data || [];
+    setAllEmployees(employees);
+
+    const map = new Map<string, Employee>();
+    employees.forEach(emp => {
+      const key = `${emp.lastName}-${emp.firstName}`;
+      map.set(key, emp);
+    });
+    setEmployeeMap(map);
+    console.log("Employee map keys:", Array.from(map.keys()));
+  };
+
+  fetchEmployees();
+}, []);
+
+const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+
+  if (!Array.isArray(allEmployees)) {
+    console.error("allEmployees is not ready:", allEmployees);
+    return;
+  }
+
+  const newPDFs: PDFFile[] = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (file.type !== "application/pdf") continue;
+
+    const url = URL.createObjectURL(file);
+    const name = file.name;
+
+    const match = name.match(/^([^-]+)-([^-]+)-/);
+    if (!match) continue;
+
+    const [_, lastName, firstName] = match;
+    const key = `${lastName}-${firstName}`;
+
+    newPDFs.push({ url, name, assignedTo: key });
+  }
+
+  const updatedEmployees: EmployeeWithPDFs[] = [];
+
+  newPDFs.forEach((pdf) => {
+  console.log("Trying to match PDF:", pdf.name, "as", pdf.assignedTo);
+  const emp = employeeMap.get(pdf.assignedTo ?? "");
+  if (emp) {
+    const existing = updatedEmployees.find((e) => e.employeeID === emp.employeeID
+);
+    if (existing) {
+      existing.pdfs.push(pdf);
+    } else {
+      updatedEmployees.push({ ...emp, pdfs: [pdf] });
+    }
+  }
+});
+
+  setMatchedEmployees((prev) => {
+    const updated = [...prev];
+    updatedEmployees.forEach((newEmp) => {
+      const existing = updated.find((e) => e.employeeID === newEmp.employeeID);
+      if (existing) {
+        existing.pdfs.push(...newEmp.pdfs);
+      } else {
+        updated.push(newEmp);
+      }
+    });
+    return updated;
+  });
+
+  setPdfFiles((prev) => [...prev, ...newPDFs]);
+  setCurrentIndex(0);
+};
 
   return (
     <Flex p="6" gap="6" w="100%" h="full" align="flex-start">
@@ -53,9 +156,9 @@ const EmployeeEmailer = () => {
 
           <Box maxH="45vh" overflowY="auto">
             <VStack align="start" spacing="3">
-              {[...Array(10)].map((_, i) => (
+              {matchedEmployees.map((emp) => (
                 <Box
-                  key={i}
+                  key={emp.employeeID}
                   border="1px solid #CCC"
                   p="2"
                   w="100%"
@@ -67,39 +170,47 @@ const EmployeeEmailer = () => {
                       Employee Name:
                     </Box>{" "}
                     <Box as="span" color="#000000">
-                      [Employee Name]
+                      {emp.lastName}, {emp.firstName}
                     </Box>
                   </Text>
+
                   <Text fontSize="sm">
                     <Box as="span" color="#48630E" fontWeight="bold">
                       ID:
                     </Box>{" "}
                     <Box as="span" color="#000000">
-                      [ID]
+                      {emp.employeeID}
                     </Box>
                   </Text>
+
+                  <Text fontSize="sm">
+                    <Box as="span" color="#48630E" fontWeight="bold">
+                      Email:
+                    </Box>{" "}
+                    <Box as="span" color="#000000">
+                      {emp.email}
+                    </Box>
+                  </Text>
+
+                  <Text fontSize="sm" mt="2">
+                    <Box as="span" color="#48630E" fontWeight="bold">
+                      PDF(s) to be sent:
+                    </Box>
+                  </Text>
+
+                  {emp.pdfs.map((pdf, i) => (
+                    <Text key={i} fontSize="sm" ml="4">
+                      [{pdf.name}]
+                    </Text>
+                  ))}
                 </Box>
               ))}
             </VStack>
           </Box>
         </Box>
-          <Flex justify="flex-end" mt="2">
-            <Button
-              size="md"
-              bg="#EEE9AA"
-              color="#626F47"
-              fontSize="xs"
-              fontWeight="bold"
-              height="50px"
-              width="100px"
-              _hover={{ bg: "#626F47", color: "#FEFAE0" }}
-            >
-              + Add Employee
-            </Button>
-          </Flex>
       </Box>
 
-      {/* Right: Payslip View Box */}
+      {/* Right: PDF View Box */}
       <Box
         flex="3"
         bg="#FFFCD9"
@@ -108,20 +219,37 @@ const EmployeeEmailer = () => {
         boxShadow="md"
         minW="500px"
       >
-        <Text fontWeight="bold" mb="3" color="#48630E">
-          Payslip View
-        </Text>
+      <Flex justify="space-between" align="center" mb="3">
+        <Box>
+          <Text fontWeight="extrabold" fontSize="lg" color="#48630E">
+            PDF View
+          </Text>
+          {pdfFiles.length > 0 && (
+            <Text fontWeight="bold" fontSize="sm" color="#48630E">
+              Currently viewing: {pdfFiles[currentIndex]?.name}
+            </Text>
+          )}
+        </Box>
 
-        {/* Action Buttons */}
-        <Flex justifyContent="flex-end" alignItems="center" mb="4" gap={3}>
-          <Button size="sm" 
+        <Flex gap={3}>
+          <Button
+            size="sm"
             bg="#EEE9AA"
             color="#48630E"
             fontWeight="bold"
             _hover={{ bg: "#626F47", color: "#FEFAE0" }}
-            >
+            onClick={() => fileInputRef.current?.click()}
+          >
             Import PDF
           </Button>
+          <input
+            type="file"
+            accept="application/pdf"
+            multiple
+            style={{ display: "none" }}
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
           <Button
             size="sm"
             leftIcon={<FaPaperPlane />}
@@ -130,7 +258,7 @@ const EmployeeEmailer = () => {
             fontWeight="bold"
             _hover={{ bg: "#626F47", color: "#FEFAE0" }}
           >
-            Send
+            Email Current PDF
           </Button>
           <Button
             size="sm"
@@ -139,9 +267,10 @@ const EmployeeEmailer = () => {
             fontWeight="bold"
             _hover={{ bg: "#626F47", color: "#FEFAE0" }}
           >
-            Email All
+            Email All PDFs
           </Button>
         </Flex>
+      </Flex>
 
         {/* PDF Placeholder */}
         <Box
@@ -150,13 +279,59 @@ const EmployeeEmailer = () => {
           bg="white"
           h="70vh"
           w="100%"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          color="gray.400"
+          overflow="hidden"
         >
-          <Text fontSize="sm">[ PDF Preview Area ]</Text>
+          {pdfFiles.length > 0 ? (
+            <embed src={pdfFiles[currentIndex]?.url} width="100%" height="100%" type="application/pdf" />
+          ) : (
+            <Flex h="100%" align="center" justify="center" color="gray.400">
+              <Text fontSize="sm">[ PDF Preview Area ]</Text>
+            </Flex>
+          )}
         </Box>
+        {pdfFiles.length > 1 && (
+        <Flex justify="center" align="center" mt="3" gap="2">
+          <Button
+            size="xs"
+            onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
+            isDisabled={currentIndex === 0}
+          >
+            &lt;
+          </Button>
+
+          <Text fontSize="sm">PDF:</Text>
+          <input
+            type="number"
+            value={currentIndex + 1}
+            min={1}
+            max={pdfFiles.length}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              if (!isNaN(value) && value >= 1 && value <= pdfFiles.length) {
+                setCurrentIndex(value - 1);
+              }
+            }}
+            style={{
+              width: "50px",
+              padding: "4px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              textAlign: "center",
+            }}
+          />
+          <Text fontSize="sm">of {pdfFiles.length}</Text>
+
+          <Button
+            size="xs"
+            onClick={() =>
+              setCurrentIndex((prev) => Math.min(prev + 1, pdfFiles.length - 1))
+            }
+            isDisabled={currentIndex === pdfFiles.length - 1}
+          >
+            &gt;
+          </Button>
+        </Flex>
+      )}
       </Box>
     </Flex>
   );

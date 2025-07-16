@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const employees = await Employee.find({});
       return res.status(200).json({ success: true, data: employees });
     } catch (err: any) {
-      console.error("❌ Failed to fetch employees:", err);
+      console.error(" Failed to fetch employees:", err);
       return res.status(500).json({ success: false, message: err.message });
     }
   } else {
