@@ -68,7 +68,8 @@ export function parseCSV(file: File, existing: AttendanceEntry[], onMerged: (mer
 }
 
 function detectFormat(headers: string[]): "GLog" | "GForm" {
-    if (headers.includes("ID") && headers.includes("Position")) {
+    console.log(headers);
+    if (headers.includes("ID") && headers.includes("POSITION")) {
         return "GLog";
     } 
     else if (headers.includes("Timestamp") || headers.includes("ACTION")) {
@@ -80,9 +81,23 @@ function detectFormat(headers: string[]): "GLog" | "GForm" {
 }
 
 function parseGLog(text: string): GLogEntry[] {
+    const headerCount: Record<string, number> = {};
     const results = Papa.parse<Partial<GLogEntry>>(text, {
         header: true,
         skipEmptyLines: true,
+        transformHeader: (header : string) => {
+            console.log(header);
+            const base = header.trim().toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase());
+            console.log(base);
+            console.log(header)
+            if (headerCount[base] == null || headerCount[base] == 0) {
+                headerCount[base] = 0;
+                return base;
+            } else {
+                headerCount[base]++;
+                return `${base}${headerCount[base]}`;
+            }
+        }
     });
 
     if (results.errors.length > 0) {
@@ -92,7 +107,7 @@ function parseGLog(text: string): GLogEntry[] {
                 .join(", ")}`
             );
     }
-
+    console.log(results.data);
     return results.data.map((row : Partial<GLogEntry>): GLogEntry => ({
         id: (row.id ?? "").trim(),
         position: (row.position ?? "").trim(),
@@ -172,14 +187,15 @@ function normalizeGForm(data : GFormEntry[]): AttendanceEntry[] {
 }
 
 function normalizeGLog(data : GLogEntry[]): AttendanceEntry[] {
-
+    console.log(data);
     return data.map((row) => {
-        const datetime = new Date(`${row.date}T${row.time}`)
+        const datetime = new Date(`${row.time}`); //(`${row.date}T${row.time.getTime()}`)
         const employeeID = row.id;
         const employeeName = row.name;
         const lateDeduct = row.lateDeduct;
         const remarks = row.note;
-
+        console.log(datetime);
+        console.log(`${row.date}T${row.time}`)
         return {
             datetime,
             employeeID,
