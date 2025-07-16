@@ -1,6 +1,7 @@
 // pages/employeeemailerpage.tsx
 import { Box } from "@chakra-ui/react";
 import EmployeeEmailer from "../../views/employeeemailerview";
+import { requireAuth } from "@/utils/authGuard";
 
 const EmployeeEmailerPage = () => {
   return (
@@ -16,5 +17,9 @@ const EmployeeEmailerPage = () => {
     </Box>
   );
 };
+
+export const getServerSideProps = requireAuth(async () => {
+  return { props: {} };
+});
 
 export default EmployeeEmailerPage;
