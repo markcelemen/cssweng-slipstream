@@ -50,6 +50,7 @@ export function parseCSV(file: File, existing: AttendanceEntry[], onMerged: (mer
             normalized = normalizeGLog(parsed);
         } else {
             parsed = parseGForm(text);
+            console.log("GForm File parsed.");
             normalized = normalizeGForm(parsed);
         }
 
@@ -110,13 +111,17 @@ function parseGLog(text: string): GLogEntry[] {
 }
 
 function parseGForm(text: string): GFormEntry[] {
+    console.log("bruh");
     const headerCount: Record<string, number> = {};
     const results = Papa.parse<Partial<GFormEntry>>(text, {
         header: true,
         skipEmptyLines: true,
         transformHeader: (header : string) => {
-            const base = header.trim().toLowerCase().replace(/\s+/g, "");
-            if (headerCount[base] == null) {
+            console.log(header);
+            const base = header.trim().toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase());
+            console.log(base);
+            console.log(header)
+            if (headerCount[base] == null || headerCount[base] == 0) {
                 headerCount[base] = 0;
                 return base;
             } else {
@@ -133,10 +138,10 @@ function parseGForm(text: string): GFormEntry[] {
                 .join(", ")}`
         );
     }
-
+    console.log(results.data);
     return results.data.map((row: Partial<GFormEntry>): GFormEntry => ({
         timestamp: (row.timestamp ?? "").trim(),
-        nameOfEmployee: (row.nameOfEmployee ?? "").trim(),
+        nameOfEmployee: (row.nameofemployee ?? "").trim(),
         action: (row.action ?? "").trim(),
         note: (row.note ?? "").trim(),
         date: (row.date ?? "").trim(),
@@ -145,7 +150,7 @@ function parseGForm(text: string): GFormEntry[] {
 }
 
 function normalizeGForm(data : GFormEntry[]): AttendanceEntry[] {
-
+    console.log(data);
     return data.map((row) => {
         const datetime = new Date(`${row.timestamp}`);
         

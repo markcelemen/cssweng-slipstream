@@ -36,7 +36,6 @@ export default function CsvViewer (){
                 <Th fontSize="9px" textAlign="center">DATE</Th>
                 <Th fontSize="9px" textAlign="center">EMPLOYEE ID</Th>
                 <Th fontSize="9px" textAlign="center">EMPLOYEE NAME</Th>
-                <Th fontSize="9px" textAlign="center">Username</Th>
                 <Th fontSize="9px" textAlign="center">TIME</Th>
                 <Th fontSize="9px" textAlign="center">REMARKS</Th>
               </Tr>
