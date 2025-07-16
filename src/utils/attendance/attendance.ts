@@ -35,27 +35,33 @@ interface GFormEntry {
     date1: string;
 }
 
-export function parseCSV(file: File, onParsed: (data: GLogEntry[] | GFormEntry[]) => void) {
+export async function parseCSV(file: File, existing: AttendanceEntry[], onMerged: (merged: AttendanceEntry[]) => void) {
     const reader = new FileReader();
     reader.onload = (event) => {
         const text = event.target?.result as string;
+
         const headers = Papa.parse(text, { header: true }).meta.fields || [];
         const format = detectFormat(headers);
 
-        let data: GLogEntry[] | GFormEntry[];
+        let parsed: GLogEntry[] | GFormEntry[];
+        let normalized: AttendanceEntry[];
         if (format === "GLog") {
-            data = parseGLog(text);
-            // normalizeGLog(data);
+            parsed = parseGLog(text);
+            normalized = normalizeGLog(parsed);
         } else {
-            data = parseGForm(text);
-            // normalizeGForm(data);
+            parsed = parseGForm(text);
+            normalized = normalizeGForm(parsed);
         }
 
-        // check if entries exists
-        // check if safe to merge
-        // merge if needed
+        if(isSafeToMerge(existing, normalized)) {
+            const merged = mergeEntries(existing, normalized);
+            onMerged(merged);
+            console.log("Safe to merge. Merged data sent.");
+        }
+        else {
+            console.warn("Incoming batch already represented in existing data. Skipping merge.");
+        }
 
-        onParsed(data);
     };
     reader.readAsText(file);
 }
@@ -108,7 +114,7 @@ function parseGForm(text: string): GFormEntry[] {
     const results = Papa.parse<Partial<GFormEntry>>(text, {
         header: true,
         skipEmptyLines: true,
-        transformHeader: (header) => {
+        transformHeader: (header : string) => {
             const base = header.trim().toLowerCase().replace(/\s+/g, "");
             if (headerCount[base] == null) {
                 headerCount[base] = 0;
@@ -180,9 +186,6 @@ function normalizeGLog(data : GLogEntry[]): AttendanceEntry[] {
 }
 
 function mergeEntries(existing : AttendanceEntry[], incoming : AttendanceEntry[]) {
-
-    // check if safe to merge
-
     const merged = [ ...existing, ...incoming ];
 
     return merged.sort((a, b) => {
@@ -192,6 +195,24 @@ function mergeEntries(existing : AttendanceEntry[], incoming : AttendanceEntry[]
         return datetimeA.getTime() - datetimeB.getTime();
     });
 }
+
+function isSafeToMerge(existing : AttendanceEntry[], incoming : AttendanceEntry[]) {
+    if (incoming.length === 0) {
+        return false;
+    }
+    
+    const sampleRow = incoming[0];
+
+    const exists = existing.some(e =>
+        e.datetime === sampleRow.datetime &&
+        e.employeeID === sampleRow.employeeID &&
+        e.remarks === sampleRow.remarks
+    );
+
+    return !exists;
+}
+
+
 
 // parseCSV
 // detectFormat
