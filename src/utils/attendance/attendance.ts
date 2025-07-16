@@ -210,7 +210,8 @@ function mergeEntries(existing : AttendanceEntry[], incoming : AttendanceEntry[]
     const merged = [ ...existing, ...incoming ];
 
     return merged.sort((a, b) => {
-        return a.datetime - b.datetime;
+        // return a.datetime - b.datetime; // sort by datetime
+        return a.employeeID - b.employeeID;
     });
 }
 
