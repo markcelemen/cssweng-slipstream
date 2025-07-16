@@ -210,10 +210,7 @@ function mergeEntries(existing : AttendanceEntry[], incoming : AttendanceEntry[]
     const merged = [ ...existing, ...incoming ];
 
     return merged.sort((a, b) => {
-        const datetimeA = new Date(`$a.datetime`);
-        const datetimeB = new Date(`$b.datetime`);
-
-        return datetimeA.getTime() - datetimeB.getTime();
+        return a.datetime - b.datetime;
     });
 }
 
