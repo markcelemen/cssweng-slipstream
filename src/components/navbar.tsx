@@ -72,8 +72,13 @@ const Navbar = (): JSX.Element => {
         </div>
 
         <div className={styles.logoutAndHelp}>
-          <button className={styles.logoutBtn} onClick={() => alert("Logout pressed")}>
-             
+          <button
+            className={styles.logoutBtn}
+            onClick={async () => {
+              await fetch('/api/auth/logout');
+              window.location.href = '/login';
+            }}
+          >  
 
             <div className={styles.textWrapper}>Logout</div>
           </button>
@@ -151,7 +156,7 @@ const Navbar = (): JSX.Element => {
                 ${styles.textWrapper6}
                 ${router.pathname === "/payslip-view" ? styles.active : ""}
               `}
-              onClick={() => router.push("/payslip-view")}
+              onClick={() => router.push("/employeeemailer")}
             >
               Payslip View
             </button>
