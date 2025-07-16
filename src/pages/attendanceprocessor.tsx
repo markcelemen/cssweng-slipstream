@@ -11,15 +11,15 @@ import {
   Td,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { GLogEntry, parseCSV } from "../utils/attendance/biometrics";
+import { AttendanceEntry, parseCSV } from "../utils/attendance/attendance";
 
 export default function CsvViewer (){
-    const [data, setData] = useState<GlogEntry[]>([]);
+    const [entries, setEntries] = useState<AttendanceEntry[]>([]);
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file){
-        parseCSV(file, setData);
+        parseCSV(file, entries, setEntries);
     }
       e.target.value = ""; // Reset file input
     };
@@ -29,43 +29,30 @@ export default function CsvViewer (){
       <Box>
         <input type="file" accept=".csv" onChange={handleFileUpload} />
 
-        {data.length > 0 && (
+        {entries.length > 0 && (
           <Table mt={4} size="sm" variant="striped">
             <Thead>
               <Tr>
-                <Th fontSize="9px" textAlign="center">ID</Th>
-                <Th fontSize="9px" textAlign="center">Position</Th>
-                <Th fontSize="9px" textAlign="center">Name</Th>
+                <Th fontSize="9px" textAlign="center">DATE</Th>
+                <Th fontSize="9px" textAlign="center">EMPLOYEE ID</Th>
+                <Th fontSize="9px" textAlign="center">EMPLOYEE NAME</Th>
                 <Th fontSize="9px" textAlign="center">Username</Th>
-                <Th fontSize="9px" textAlign="center">Date</Th>
-                {/* <Th fontSize="9px" textAlign="center">Time</Th> */}
-                <Th fontSize="9px" textAlign="center">Late</Th>
-                <Th fontSize="9px" textAlign="center">Late Deduct</Th>
-                <Th fontSize="9px" textAlign="center">Irregular</Th>
-                <Th fontSize="9px" textAlign="center">Undertime</Th>
-                <Th fontSize="9px" textAlign="center">Undertime Deduct</Th>
-                <Th fontSize="9px" textAlign="center">Excused</Th>
-                <Th fontSize="9px" textAlign="center">Note</Th>
+                <Th fontSize="9px" textAlign="center">TIME</Th>
+                <Th fontSize="9px" textAlign="center">REMARKS</Th>
               </Tr>
             </Thead>
             <Tbody bg="#FEFAE0">
-              {data.map((entry, index) => (
+              {entries.map((entry, index) => (
                 <Tr key={index}>
-                  <Td fontSize="10px" textAlign="center">{entry.id}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.position}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.name}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.username}</Td>
                   <Td fontSize="10px" textAlign="center">
-                      {entry.date instanceof Date && !isNaN(entry.date.getTime())
-                      ? entry.date.toLocaleString() : "Invalid Date"}</Td>
-                  {/* <Td fontSize="10px" textAlign="center">{entry.time}</Td> */}
-                  <Td fontSize="10px" textAlign="center">{entry.late}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.lateDeduct}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.irregular}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.undertime}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.undertimeDeduct}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.excused}</Td>
-                  <Td fontSize="10px" textAlign="center">{entry.note}</Td>
+                      {entry.datetime instanceof Date
+                      ? entry.datetime.toLocaleDateString() : "Invalid Date"}</Td>
+                  <Td fontSize="10px" textAlign="center">{entry.employeeID}</Td>
+                  <Td fontSize="10px" textAlign="center">{entry.employeeName}</Td>
+                  <Td fontSize="10px" textAlign="center">
+                      {entry.datetime instanceof Date
+                      ? entry.datetime.toLocaleTimeString() : "Invalid Time"}</Td>
+                  <Td fontSize="10px" textAlign="center">{entry.remarks}</Td>
                 </Tr>
               ))}
             </Tbody>

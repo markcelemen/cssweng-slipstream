@@ -35,7 +35,7 @@ interface GFormEntry {
     date1: string;
 }
 
-export async function parseCSV(file: File, existing: AttendanceEntry[], onMerged: (merged: AttendanceEntry[]) => void) {
+export function parseCSV(file: File, existing: AttendanceEntry[], onMerged: (merged: AttendanceEntry[]) => void) {
     const reader = new FileReader();
     reader.onload = (event) => {
         const text = event.target?.result as string;
