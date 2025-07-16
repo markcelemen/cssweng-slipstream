@@ -11,7 +11,7 @@ import {
   Td,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { GlogEntry, parseCSV } from "../utils/attendanceutil";
+import { GLogEntry, parseCSV } from "../utils/attendance/biometrics";
 
 export default function CsvViewer (){
     const [data, setData] = useState<GlogEntry[]>([]);
