@@ -116,6 +116,86 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   setCurrentIndex(0);
 };
 
+const blobToBase64 = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+const handleEmailAll = async () => {
+  for (const emp of matchedEmployees) {
+    const attachments = await Promise.all(
+      emp.pdfs.map(async (pdf) => {
+        const blob = await fetch(pdf.url).then((res) => res.blob());
+        const content = await blobToBase64(blob);
+        return {
+          filename: pdf.name,
+          content,
+          encoding: 'base64',
+        };
+      })
+    );
+
+    const res = await fetch('/api/email/send-brevo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: emp.email,
+        subject: 'Your Payslips',
+        text: 'Attached are your payslip(s).',
+        attachments,
+      }),
+    });
+
+    if (!res.ok) {
+      console.error(`Failed to send to ${emp.email}`);
+    }
+  }
+
+  alert('All emails sent!');
+};
+
+const handleEmailCurrent = async () => {
+  const currentPDF = pdfFiles[currentIndex];
+  if (!currentPDF) return;
+
+  const emp = employeeMap.get(currentPDF.assignedTo ?? "");
+  if (!emp) {
+    alert("No matching employee found for this PDF.");
+    return;
+  }
+
+  const blob = await fetch(currentPDF.url).then((res) => res.blob());
+  const content = await blobToBase64(blob);
+
+  const res = await fetch('/api/email/send-brevo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to: emp.email,
+      subject: 'Your Payslip',
+      text: 'Attached is your payslip.',
+      attachments: [
+        {
+          filename: currentPDF.name,
+          content,
+          encoding: 'base64',
+        },
+      ],
+    }),
+  });
+
+  if (res.ok) {
+    alert(`Email sent to ${emp.firstName} ${emp.lastName} at ${emp.email}`);
+  } else {
+    console.error(`Failed to send to ${emp.email}`);
+    alert("Failed to send the email.");
+  }
+};
+
+
   return (
     <Flex p="6" gap="6" w="100%" h="full" align="flex-start">
       {/* Left: Employee List Box */}
@@ -256,6 +336,7 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             bg="#EEE9AA"
             color="#48630E"
             fontWeight="bold"
+            onClick={handleEmailCurrent}
             _hover={{ bg: "#626F47", color: "#FEFAE0" }}
           >
             Email Current PDF
@@ -265,6 +346,7 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             bg="#EEE9AA"
             color="#48630E"
             fontWeight="bold"
+            onClick={handleEmailAll}
             _hover={{ bg: "#626F47", color: "#FEFAE0" }}
           >
             Email All PDFs
