@@ -29,14 +29,16 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/bcrypt": "^5.0.2",
+    "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
-    "@types/node": "^20",
+    "@types/node": "^20.19.8",
     "@types/papaparse": "^5.3.16",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "jest": "^30.0.4",
+    "node-mocks-http": "^1.17.2",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3"
   }
