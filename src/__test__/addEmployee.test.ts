@@ -1,4 +1,4 @@
-import handler from '../pages/api/employees/add'; // Adjust the path
+import handler from '../pages/api/employees/add';
 import { createMocks } from 'node-mocks-http';
 import { Employee } from '../../models/employeemodel';
 import * as db from '../../models/mongodb';
