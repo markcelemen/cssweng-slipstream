@@ -9,6 +9,7 @@ import {
   Text,
   Divider,
 } from "@chakra-ui/react";
+import router from "next/router";
 import { FcGoogle } from "react-icons/fc";
 
 const Login = () => {
@@ -89,7 +90,7 @@ const Login = () => {
           </Heading>
 
           <Stack spacing={4}>
-            <Input placeholder="email" bg="white" />
+            <Input placeholder="username" bg="white" />
             <Input placeholder="password" type="password" bg="white" />
             <Button
               bgGradient="linear(to-r, #1E90FF, #007FFF)"
@@ -97,36 +98,42 @@ const Login = () => {
               fontWeight="bold"
               _hover={{ opacity: 0.9 }}
               mt={2}
-              onClick={() => {
-              const testEmail = "123";
-              const testPassword = "123";
+              onClick={async () => {
+                const usernameInput = document.querySelector("input[placeholder='username']") as HTMLInputElement;
+                const passwordInput = document.querySelector("input[placeholder='password']") as HTMLInputElement;
 
-              const emailInput = document.querySelector("input[placeholder='email']") as HTMLInputElement;
-              const passwordInput = document.querySelector("input[placeholder='password']") as HTMLInputElement;
+                const username = usernameInput?.value || "";
+                const password = passwordInput?.value || "";
 
-              if (emailInput?.value === testEmail && passwordInput?.value === testPassword) {
-                alert("Login successful!");
-                // You can redirect or update context here
-              } else {
-                alert("Invalid email or password");
-            }
-         }}
+                try {
+                  const res = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ username, password }),
+                  });
+
+                  if (!res.ok) {
+                    alert("Login failed. Please check your credentials.");
+                    return;
+                  }
+
+                  const data = await res.json();
+                  if (data.success) {
+                    router.replace("/employeetable");
+                  } else {
+                    alert("Invalid username or password");
+                  }
+                } catch (err) {
+                  console.error("Login error:", err);
+                  alert("Login failed. Please try again.");
+                }
+              }}
             >
               LOGIN
             </Button>
           </Stack>
-
-          <Divider my={6} />
-
-          <Button
-            leftIcon={<FcGoogle />}
-            variant="outline"
-            bg="white"
-            borderRadius="xl"
-            w="100%"
-          >
-            Login with Google
-          </Button>
         </Box>
       </Flex>
     </Flex>

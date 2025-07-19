@@ -115,13 +115,12 @@ const EmployeeEmailer = () => {
         {/* Action Buttons */}
         <Flex justifyContent="flex-end" alignItems="center" mb="4" gap={3}>
           <Button size="sm" 
-            leftIcon={<FaSave />} 
             bg="#EEE9AA"
             color="#48630E"
             fontWeight="bold"
             _hover={{ bg: "#626F47", color: "#FEFAE0" }}
             >
-            Save Payslip
+            Import PDF
           </Button>
           <Button
             size="sm"
