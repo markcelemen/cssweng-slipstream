@@ -8,9 +8,8 @@ import { GFormEntry, parseGForm, normalizeGForm } from "./googleForm";
 
 export interface AttendanceEntry {
     datetime: Date;
-    employeeID: number; // int?
+    employeeID: number;
     employeeName: string;
-    // time: string; // datetime variable is enough, but separate them for display
     lateDeduct: number,
     remarks: string;
 }
@@ -84,20 +83,4 @@ function isSafeToMerge(existing : AttendanceEntry[], incoming : AttendanceEntry[
 
     return !exists;
 }
-
-// parseCSV
-// detectFormat
-// parseGLog
-// parseGForm
-// normalizeGLog
-// normalizeGForm
-// mergeEntries
-
-// change employee name formattting
-
-// checkExistingEntries, like if already uploaded
-// parseTime ?
-// computeLate ?
-// computeLateDeduct ?
-// how to store first file and commence merging
-// separate files or nah
+// change employee name formattting ?

@@ -74,7 +74,7 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
         const datetime = new Date(`${row.timestamp}`);
         const employeeID = employeeInfo?.employeeID ?? 0; // find alternative for default
         const employeeName = row.nameofemployee;
-        const lateDeduct = computeLateDeduct(datetime, employeeInfo?.salary ?? 0); // get late threshold?
+        const lateDeduct = computeLateDeduct(datetime, employeeInfo?.salary ?? 0);
         const remarks = row.note;
         return {
             datetime,

@@ -68,7 +68,7 @@ export function parseGLog(text: string): GLogEntry[] {
 export function normalizeGLog(data : GLogEntry[]): AttendanceEntry[] {
     console.log(data);
     return data.map((row) => {
-        const datetime = new Date(`${row.time}`); //(`${row.date}T${row.time.getTime()}`)
+        const datetime = new Date(`${row.time}`);
         const employeeID = Number(row.id);
         const employeeName = row.name;
         const lateDeduct = Number(row.latededuct);
