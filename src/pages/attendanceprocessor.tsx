@@ -37,6 +37,7 @@ export default function CsvViewer (){
                 <Th fontSize="9px" textAlign="center">EMPLOYEE ID</Th>
                 <Th fontSize="9px" textAlign="center">EMPLOYEE NAME</Th>
                 <Th fontSize="9px" textAlign="center">TIME</Th>
+                <Th fontSize="9px" textAlign="center">LATE DEDUCTION</Th>
                 <Th fontSize="9px" textAlign="center">REMARKS</Th>
               </Tr>
             </Thead>
@@ -51,6 +52,7 @@ export default function CsvViewer (){
                   <Td fontSize="10px" textAlign="center">
                       {entry.datetime instanceof Date
                       ? entry.datetime.toLocaleTimeString() : "Invalid Time"}</Td>
+                  <Td fontSize="10px" textAlign="center">{entry.lateDeduct}</Td>
                   <Td fontSize="10px" textAlign="center">{entry.remarks}</Td>
                 </Tr>
               ))}
