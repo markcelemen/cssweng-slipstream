@@ -15,7 +15,20 @@
   flex: 1;
   flex-grow: 1;
   position: relative;
+  overflow-y: auto;  /* enables vertical scrolling */
+  overflow-x: hidden;
   gap:1vw;
+}
+.pto-wrapper::-webkit-scrollbar {
+  width: .7vh;
+}
+.pto-wrapper::-webkit-scrollbar-thumb {
+  background-color: #48630E;
+  border-radius: 4px;
+}
+
+.pto-wrapper::-webkit-scrollbar-track {
+  background-color: #EBE8C8;
 }
 /*TABLE TABLE*/
 .attendance-row{
@@ -605,8 +618,20 @@ padding: 2vw 1vw;
   flex-grow: 1;
   position: relative;
   width: 100%;
+  overflow-y: auto;
+  overflow: hidden;
+}
+.rows-wrapper::-webkit-scrollbar {
+  width: .7vh;
+}
+.rows-wrapper::-webkit-scrollbar-thumb {
+  background-color: #48630E;
+  border-radius: 4px;
 }
 
+.rows-wrapper::-webkit-scrollbar-track {
+  background-color: #EBE8C8;
+}
 .outerwrapper .rows-inside {
   align-self: stretch;
   flex: 1;
