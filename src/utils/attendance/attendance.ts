@@ -1,10 +1,6 @@
-import { i, label } from "framer-motion/client";
-import { ExperimentalPPRConfig } from "next/dist/server/lib/experimental/ppr";
-import Papa, { ParseResult, ParseError } from "papaparse";
-import { LiaTeamspeak } from "react-icons/lia";
+import Papa from "papaparse";
 import { GLogEntry, parseGLog, normalizeGLog } from './googleLog';
 import { GFormEntry, parseGForm, normalizeGForm } from "./googleForm";
-
 
 export interface AttendanceEntry {
     datetime: Date;

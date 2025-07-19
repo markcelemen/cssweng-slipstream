@@ -1,9 +1,6 @@
-
-
-import Papa, { ParseResult, ParseError } from "papaparse";
+import Papa, { ParseError } from "papaparse";
 import { AttendanceEntry } from "./attendance";
 
-// turn lowercase
 export interface GLogEntry {
     id: string;
     position: string;

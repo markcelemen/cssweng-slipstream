@@ -1,6 +1,4 @@
-
-
-import Papa, { ParseResult, ParseError } from "papaparse";
+import Papa, { ParseError } from "papaparse";
 import { AttendanceEntry } from "./attendance";
 
 export interface GFormEntry {
