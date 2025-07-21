@@ -1,7 +1,4 @@
 import "@/styles/employee-attendance.css";
-import "@/styles/employee-info-global.css"
-import "@/styles/employee-information.css"
-import "@/styles/employee-profile.css"
 import "@fontsource/inter";
 import "@/styles/globals.css";
 
