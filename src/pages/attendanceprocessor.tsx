@@ -11,7 +11,8 @@ import {
   Td,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { AttendanceEntry, parseCSV } from "../utils/attendance/attendance";
+import { parseCSV } from "../utils/attendance/processAttendance";
+import { AttendanceEntry } from "../utils/attendance/attendanceTypes";
 
 export default function CsvViewer (){
     const [entries, setEntries] = useState<AttendanceEntry[]>([]);
