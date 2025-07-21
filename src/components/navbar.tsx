@@ -42,35 +42,33 @@ const Navbar = (): JSX.Element => {
           </div>
           <div className={styles.slipstream}>SLIPSTREAM</div>
         </div>
+        <div className={styles.searchrapper}>
+          
+          <div className={styles.inputrea}>
+            
+               <Image
+              className={styles.vectorz}
+              alt="searchbtn"
+              src="/Vector.png"
+              width={25}
+              height={25}
+            />
+  {
+    /////////SEARCH BAR INPUT////////////
+  }
+            <input 
+            className={styles.inputareatextbox} 
+            type="text"
+            placeholder="Search..."
+            />
 
-        <div className={styles.searchWrapper}>
-          <div className={styles.searchbar}>
-            <div className={styles.overlapGroup}>
-              <div className={styles.rectangle} />
-
-              <div className={styles.inputField}>
-                <div className={styles.div} />
-              </div>
-
-              <Image
-                className={styles.searchbtn}
-                alt="Searchbtn"
-                src="/Vector.png"
-                width={45}
-                height={45}
-              />
-
-              <Image
-                className={styles.filterdropdown}
-                alt="Filterdropdown"
-                src="/Filterdropdown.png"
-                width={45}
-                height={45}
-              />
+            <div className={styles.filterbutton}>
+              <img className={styles.img} alt="Vector" src="/Filterdropdown.png "/>
             </div>
           </div>
-        </div>
 
+        </div>
+         
         <div className={styles.logoutAndHelp}>
           <button
             className={styles.logoutBtn}
