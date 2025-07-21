@@ -24,22 +24,18 @@ import React, { useRef, useState, useEffect } from "react";
 
 // Employee type
 type Employee = {
+  employeeID: number;
   lastName: string;
   firstName: string;
   middleName: string;
   department: string;
   coordinator: string;
   position: string;
+  contactInfo: string;
+  email: string;
   totalSalary: number;
   basicSalary: number;
-  contactNumber: string;
-  employeeId: string;
-  email: string;
 };
-
-const initialEmployees: Employee[] = [
-  //Add employee objects here
-];
 
 // Returns [min, max] if array is continuous, else null
 function getContinuousRange(selected: number[]): [number, number] | null {
@@ -54,13 +50,12 @@ function getContinuousRange(selected: number[]): [number, number] | null {
 const ROWS_PER_PAGE = 20;
 
 const EmployeeTable = () => {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedRows, setSelectedRows] = useState<number[]>([]); // GLOBAL indices!
   const [selectRangeInputs, setSelectRangeInputs] = useState<[string, string]>(["", ""]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; row: number } | null>(null);
-
   const [currentPage, setCurrentPage] = useState<number>(1);
-
   const inputActiveRef = useRef(false);
   const inputBoxRef = useRef<HTMLDivElement>(null);
   const tableBoxRef = useRef<HTMLDivElement>(null);
@@ -70,18 +65,19 @@ const EmployeeTable = () => {
   // Modal
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [newEmployee, setNewEmployee] = useState<Employee>({
+    employeeID: 80000000,
     lastName: "",
     firstName: "",
     middleName: "",
     department: "",
     coordinator: "",
     position: "",
+    contactInfo: "",
+    email: "",
     totalSalary: 0,
     basicSalary: 0,
-    contactNumber: "",
-    employeeId: "",
-    email: "",
   });
+
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(employees.length / ROWS_PER_PAGE));
@@ -150,6 +146,29 @@ const EmployeeTable = () => {
     setSelectedRows([]);
   };
 
+  // Used to fetch employee data from the database
+  useEffect(() => {
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch('/api/employees');
+      const json = await res.json();
+      if (json.success) {
+        setEmployees(json.data);
+      } else {
+        console.error("Error fetching employees:", json.message);
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
+  };
+
+  fetchEmployees(); // fetch once when component mounts
+
+  const interval = setInterval(fetchEmployees, 5000); // refresh every 5s
+  return () => clearInterval(interval); // cleanup
+}, []);
+
+
   // Sync select inputs with selectedRows (if continuous)
   useEffect(() => {
     if (inputActiveRef.current) {
@@ -200,30 +219,96 @@ const EmployeeTable = () => {
   };
 
   // Add employee handler
-  const handleAddEmployee = () => {
-    const newList = [...employees, newEmployee];
-    setEmployees(newList);
-    setNewEmployee({
-      lastName: "",
-      firstName: "",
-      middleName: "",
-      department: "",
-      coordinator: "",
-      position: "",
-      totalSalary: 0,
-      basicSalary: 0,
-      contactNumber: "",
-      employeeId: "",
-      email: "",
-    });
-    setSelectedRows([]);
-    setSelectRangeInputs(["", ""]);
-    shiftAnchorRef.current = null;
+  const handleAddEmployee = async () => {
+    try {
+      const response = await fetch("/api/employees/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newEmployee),
+      });
 
-    // Go to page where the new employee appears
-    const newPage = Math.ceil(newList.length / ROWS_PER_PAGE);
-    setCurrentPage(newPage);
-    onClose();
+      if (!response.ok) throw new Error("Failed to add employee");
+
+      // Optionally update UI after successful insert
+      const updatedList = [...employees, newEmployee];
+      setEmployees(updatedList);
+      setNewEmployee({
+        employeeID: 80000000,
+        lastName: "",
+        firstName: "",
+        middleName: "",
+        department: "",
+        coordinator: "",
+        position: "",
+        contactInfo: "",
+        email: "",
+        totalSalary: 0,
+        basicSalary: 0,
+      });
+      setSelectedRows([]);
+      setSelectRangeInputs(["", ""]);
+      shiftAnchorRef.current = null;
+
+      // Move to last page
+      const newPage = Math.ceil(updatedList.length / ROWS_PER_PAGE);
+      setCurrentPage(newPage);
+      onClose();
+    } catch (error) {
+      console.error("Error adding employee:", error);
+      alert("Failed to add employee. Please try again.");
+    }
+  };
+
+  //Update employee handler
+  const handleUpdateEmployee = async () => {
+    const employeeIDsToUpdate = selectedRows
+      .map((idx) => employees[idx]?.employeeID)
+      .filter((id): id is number => id !== undefined);
+
+    const updates: Partial<Employee> = {};
+    Object.entries(newEmployee).forEach(([key, value]) => {
+      if (key === "employeeID") return;
+      if (value !== "" && value !== 0) {
+        // @ts-ignore
+        updates[key] = value;
+      }
+    });
+
+    if (Object.keys(updates).length === 0) {
+      alert("No fields changed.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/employees/update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ employeeIDs: employeeIDsToUpdate, updates }),
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+
+      // Refresh local state (you could fetch from DB instead)
+      const updated = employees.map((emp) =>
+        employeeIDsToUpdate.includes(emp.employeeID)
+          ? { ...emp, ...updates }
+          : emp
+      );
+      setEmployees(updated);
+      setSelectedRows([]);
+      setSelectRangeInputs(["", ""]);
+      shiftAnchorRef.current = null;
+      onClose();
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Update failed:", err);
+      alert("Failed to update selected employees.");
+    }
   };
 
   // Deselect context menu and rows when clicking outside
@@ -399,23 +484,11 @@ const EmployeeTable = () => {
                     <Td textAlign="center">{emp.position}</Td>
                     <Td textAlign="center">{emp.totalSalary}</Td>
                     <Td textAlign="center">{emp.basicSalary}</Td>
-                    <Td textAlign="center">{emp.contactNumber}</Td>
-                    <Td textAlign="center">{emp.employeeId}</Td>
+                    <Td textAlign="center">{emp.contactInfo}</Td>
+                    <Td textAlign="center">{emp.employeeID}</Td>
                     <Td>
                       <Flex justify="space-between" align="center">
                         {emp.email}
-                        <IconButton
-                          icon={<EditIcon />}
-                          aria-label="Edit"
-                          variant="ghost"
-                          color="#626F47"
-                          height="12px"
-                          width="12px"
-                          size="xs"
-                          _hover={{ bg: "#626F47", color: "#FEFAE0" }}
-                          p="0px 10px 0px 10px"
-                          onClick={() => alert("Edit selected!")}
-                        />
                       </Flex>
                     </Td>
                   </Tr>
@@ -437,19 +510,60 @@ const EmployeeTable = () => {
               p={2}
               minW="140px"
             >
-              <Button size="sm" w="100%" mb={1} onClick={() => alert("Edit selected!")}>
+              <Button size="sm" w="100%" mb={1} onClick={() => {
+                setIsEditing(true);
+                setNewEmployee({
+                  employeeID: 0,
+                  lastName: "",
+                  firstName: "",
+                  middleName: "",
+                  department: "",
+                  coordinator: "",
+                  position: "",
+                  contactInfo: "",
+                  email: "",
+                  totalSalary: 0,
+                  basicSalary: 0,
+                });
+                onOpen();
+                setContextMenu(null);
+              }}>
                 Edit Selected ({selectedRows.length})
               </Button>
               <Button
                 size="sm"
                 colorScheme="red"
                 w="100%"
-                onClick={() => {
-                  setEmployees(employees.filter((_, idx) => !selectedRows.includes(idx)));
-                  setSelectedRows([]);
-                  setSelectRangeInputs(["", ""]);
-                  shiftAnchorRef.current = null;
-                  setContextMenu(null);
+                onClick={async () => {
+                    const employeeIDsToDelete = selectedRows.map(idx => {
+                    const emp = employees[idx];
+                    return emp?.employeeID;
+                  }).filter((id): id is number => id !== undefined);
+                  try {
+                    const res = await fetch('/api/employees/delete', {
+                      method: 'DELETE',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ employeeIDs: employeeIDsToDelete }),
+                    });
+
+                    const data = await res.json();
+                    if (!data.success) {
+                      throw new Error(data.message);
+                    }
+
+                    // Remove deleted employees from UI
+                    const remaining = employees.filter(emp => !employeeIDsToDelete.includes(emp.employeeID));
+                    setEmployees(remaining);
+                    setSelectedRows([]);
+                    setSelectRangeInputs(["", ""]);
+                    shiftAnchorRef.current = null;
+                    setContextMenu(null);
+                  } catch (err) {
+                    console.error("Error deleting employees:", err);
+                    alert("Failed to delete selected employees.");
+                  }
                 }}
               >
                 Delete Selected ({selectedRows.length})
@@ -512,7 +626,10 @@ const EmployeeTable = () => {
         />
       </Flex>
       {/* Add Employee Modal */}
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={() => {
+        setIsEditing(false);
+        onClose();
+      }}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Add Employee</ModalHeader>
@@ -527,19 +644,30 @@ const EmployeeTable = () => {
                   onChange={(e) =>
                     setNewEmployee((emp) => ({
                       ...emp,
-                      [field]: e.target.value,
+                      [field]: ["employeeID", "totalSalary", "basicSalary"].includes(field)
+                        ? Number(e.target.value)
+                        : e.target.value,
                     }))
                   }
-                  type={["totalSalary", "basicSalary"].includes(field) ? "number" : "text"}
+                  type={
+                    ["employeeID", "totalSalary", "basicSalary"].includes(field)
+                      ? "number"
+                      : "text"
+                  }
                 />
               </Box>
             ))}
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleAddEmployee}>
-              Add
+            <Button colorScheme="blue" mr={3} onClick={isEditing ? handleUpdateEmployee : handleAddEmployee}>
+              {isEditing ? "Update" : "Add"}
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={() => {
+              setIsEditing(false);
+              onClose();
+            }}>
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

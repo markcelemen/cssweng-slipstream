@@ -1,6 +1,7 @@
 import EmployeeTable from "../../views/employeetableview";
 /*import HistoryTab from "../../views/employeehistoryview";*/
 import { Box } from "@chakra-ui/react/box";
+import { requireAuth } from "@/utils/authGuard";
 
 
 const EmployeePage = () => {
@@ -10,5 +11,9 @@ const EmployeePage = () => {
     </Box>
   );
 };
+
+export const getServerSideProps = requireAuth(async () => {
+  return { props: {} };
+});
 
 export default EmployeePage;
