@@ -77,7 +77,7 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
             employeeNameQueries.push(n);
         }
     });
-
+console.log("Employee name queries: ", employeeNameQueries);
     // fetches the employees' details
     const employeeInfoList = await fetchEmployeeInfo(employeeNameQueries);
 
@@ -90,7 +90,7 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
         const key = `${info.lastName.toLowerCase()}|${info.firstName.toLowerCase()}|${(middleInitial).toLowerCase()}`;
         employeeInfoMap.set(key, info);
     });
-
+console.log("Employee info map: ", employeeInfoMap);
 
     // ✅ now normalize each row
     return data.map((row) => {
