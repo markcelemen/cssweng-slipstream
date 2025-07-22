@@ -1,0 +1,596 @@
+.employeeBoxFormat {
+    display: flex;
+    gap: 70px;
+}
+
+/* Left-Box-Format */
+.profileFormatBox {
+    background-color: rgb(255, 252, 217);
+    height: 700px;
+    width: 420px;
+    margin: 0;
+
+    border-radius: 20px;
+
+    margin-top: 40px;
+    margin-left: 120px;
+
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.25);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Picture & Name & Email */
+.nameImageFrame {
+    margin: 0;
+    margin-top: 45px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.transparentBackgroundIcon {
+    height: 150px;
+    width: 150px;
+    border-radius: 50%;
+
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.15);
+
+    cursor: pointer;
+}
+
+.fullName {
+    color: rgb(72, 99, 14);
+    font-family: "Inter", sans-serif;
+    font-size: 25px;
+    font-weight: 700;
+
+    margin-top: 15px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.email {
+    color: rgb(72, 99, 14);
+    font-family: "Inter", sans-serif;
+    font-size: 18px;
+}
+
+/* ID-Title & ID-Number */
+.idFrame {
+    background-color: rgb(72, 99, 14);
+    height: 75px;
+    width: 470px;
+    gap: 20px;
+
+    border-radius: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 25px;
+    box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.2),
+                inset 0 -4px 6px rgba(0, 0, 0, 0.1),
+                inset 4px 0 6px rgba(0, 0, 0, 0.1),
+                inset -4px 0 6px rgba(0, 0, 0, 0.1);
+}
+
+.idTitle {
+    color: rgb(255, 207, 80);
+    font-family: "Inter", sans-serif;
+    font-size: 25px;
+    font-weight: 700;
+
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.idNumber {
+    color: white;
+    font-family: "Inter", sans-serif;
+    font-size: 25px;
+}
+
+/* Notes Icon & Title & Box */
+.notesFrame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.iconTitleBox {
+    gap: 5px;
+    margin-top: 10px;
+
+    display: flex;
+    justify-content: center;
+}
+
+.notesTitle {
+    color: rgb(72, 99, 14);
+    font-family: "Inter", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.notesTextArea {
+    background-color: transparent;
+    height: 170px;
+    width: 380px;
+
+    font-size: 20px;
+
+    border-style: solid;
+    border-width: 1px;
+
+    outline: none;
+    box-shadow: inset 0 0 8px 2px rgba(72, 99, 14, 0.3);
+}
+
+.notesDivider {
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.25), transparent);
+
+  height: 2px;
+  width: 200px;
+
+  margin-top: 1px;
+  margin-bottom: 5px;
+
+  border: none;
+}
+
+/* Title & Number & Arrows */
+.currentRowFrame {
+    background-color: rgb(72, 99, 14);
+    height: 50px;
+    width: 470px;
+    gap: 20px;
+
+    border-radius: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+
+    margin-top: 25px;
+    box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.2),
+                inset 0 -4px 6px rgba(0, 0, 0, 0.1),
+                inset 4px 0 6px rgba(0, 0, 0, 0.1),
+                inset -4px 0 6px rgba(0, 0, 0, 0.1);
+}
+
+.arrowLeftButton,
+.arrowRightButton {
+    background-color: transparent;
+    border: none;
+
+    margin: 0;
+    padding: 0;
+
+    margin-left: 8px;
+    margin-right: 8px;
+
+    display: flex;
+    align-items: center;
+
+    cursor: pointer;
+}
+
+.arrowLeftButton {
+    transform: rotate(180deg);
+}
+
+.arrowLeftButton:active img,
+.arrowRightButton:active img {
+    opacity: 0.4;
+    transform: scale(0.95);
+}
+
+.currentRowTitle {
+    color: white;
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 25px;
+}
+
+.rowNumber {
+    color: white;
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 25px;
+}
+
+/* Right-Box-Format */
+.backgroundFrameBox {
+    background-color: rgb(255, 252, 217);
+    height: 700px;
+    width: 1250px;
+
+    margin-top: 40px;
+
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.25);
+
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header-Format */
+.backgroundHeader {
+    height: 100px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Header Title & Icons & Buttons */
+.employeeTitle {
+    color: rgb(72, 99, 14);
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+
+    margin-left: 30px;
+
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.buttonHeaderFrame {
+    height: 50px;
+    width: 400px;
+
+    margin-right: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+}
+
+.addButtonFormat,
+.editButtonFormat,
+.deleteButtonFormat {
+    display: flex;
+    align-items: center;
+}
+
+.addInfoButton,
+.editInfoButton,
+.deleteInfoButton {
+    background-color: transparent;
+    color: rgb(72, 99, 14);
+
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+
+    border: none;
+    cursor: pointer;
+}
+
+.addButtonFormat:hover,
+.editButtonFormat:hover,
+.deleteInfoButton:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+}
+
+/* Information Frame */
+.informationBody {
+    height: 600px;
+    width: 1190px;
+
+    margin-left: 30px;
+
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+
+    display: flex;
+
+    box-shadow: 0 -4px 5px rgba(0, 0, 0, 0.2),
+                -4px 0 5px rgba(0, 0, 0, 0.15);
+}
+
+/* Personal Information */
+.personalInformationBox {
+    width: 595px;
+
+    border-top-left-radius: 20px;
+
+    box-shadow: 4px 0 5px rgba(0, 0, 0, 0.15);
+}
+
+.personalInformationHeader {
+    background-color: rgb(255, 252, 217);
+    height: 60px;
+
+    display: flex;
+    flex-direction: column;
+
+    border-top-left-radius: 20px;
+}
+
+.personalInformationTitle {
+    color: rgb(99, 136, 19);
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 25px;
+
+    margin-left: 20px;
+    padding-top: 10px;
+}
+
+.personalInformationFrame {
+    max-height: 545px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    padding-right: 10px;
+}
+
+.personalInformationFrame::-webkit-scrollbar {
+    width: 6px;
+}
+
+.personalInformationFrame::-webkit-scrollbar-track {
+    background: rgb(255, 252, 217);
+    border-radius: 10px;
+}
+
+.personalInformationFrame::-webkit-scrollbar-thumb {
+    background: rgb(99, 136, 19);
+    border-radius: 10px;
+}
+
+.fieldFormat {
+    display: flex;
+    flex-direction: column;
+}
+
+.personalInfoFormat,
+.mainInfoFormat {
+    height: 55px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.infoLabel {
+    color: rgb(58, 60, 52);
+    font-family: "Inter", sans-serif;
+    font-size: 20px;
+
+    padding-left: 20px;
+}
+
+.infoTextbox {
+    background-color: rgb(255, 252, 217);
+    width: 300px;
+
+    font-family: "Inter", sans-serif;
+    font-size: 20px;
+
+    margin-right: 20px;
+
+    border: none;
+
+    display: flex;
+    justify-content: center;
+    
+    outline: none;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.citizenshipLabel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.citizenshipButton {
+    background-color: transparent;
+    border: none;
+    
+    cursor: pointer;
+}
+
+.citizenshipButton:active {
+    opacity: 0.4;
+}
+
+.infoTextboxContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    text-align: center;
+    overflow: hidden;
+
+    gap: 15px;
+}
+
+.infoTextbox.editable {
+    border: 1px dashed rgba(0, 0, 0, 0.3);
+    background-color: white;
+
+    text-align: center;
+}
+
+.infoLabel.editable {
+    background-color: white;
+    border: 1px dashed rgba(0, 0, 0, 0.3);
+
+    margin-left: 10px;
+    padding: 2px 4px;
+
+    border-radius: 4px;
+    outline: none;
+}
+
+/* Main Information */
+.mainInformationBox {
+    width: 600px;
+
+    border-top-right-radius: 20px;
+
+    box-shadow: 4px 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.mainInformationHeader {
+    background-color: rgb(255, 252, 217);
+    height: 60px;
+
+    display: flex;
+    flex-direction: column;
+
+    border-top-right-radius: 20px;
+}
+
+.mainInformationTitle {
+    color: rgb(99, 136, 19);
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 25px;
+
+    margin-left: 20px;
+    padding-top: 10px;
+}
+
+.mainInformationFrame {
+    max-height: 545px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    padding-right: 10px;
+}
+
+.mainInformationFrame::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mainInformationFrame::-webkit-scrollbar-track {
+    background: rgb(255, 252, 217);
+    border-radius: 10px;
+}
+
+.mainInformationFrame::-webkit-scrollbar-thumb {
+    background: rgb(99, 136, 19);
+    border-radius: 10px;
+}
+
+/* Modal */
+.modalFrame {
+    background-color: rgba(0, 0, 0, 0.5);
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+
+    font-family: "Inter", sans-serif;
+
+    position: fixed;
+
+    z-index: 999;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modalContent {
+    background-color: rgb(255, 252, 217);
+
+    padding: 25px;
+
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+    font-size: 23px;
+    font-weight: 700;
+
+    color: rgb(72, 99, 14);
+
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.modalBody label {
+    font-weight: 600;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+
+    margin-top: 10px;
+
+    color: rgb(72, 99, 14);
+}
+
+.modalInput {
+    width: 380px;
+    outline: none;
+
+    font-size: 16px;
+
+    padding: 8px;
+    margin-top: 4px;
+
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.dropdownFormat {
+    width: 395px;
+    outline: none;
+
+    font-size: 16px;
+
+    padding: 8px;
+    margin-top: 4px;
+
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.modalFooter {
+    margin-top: 20px;
+    gap: 10px;
+
+    display: flex;
+    justify-content: flex-end;
+}
+
+.modalButton {
+    font-weight: 700;
+    font-size: 15px;
+
+    padding: 8px 14px;
+
+    border: none;
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+.modalButton.save {
+    background-color: rgb(72, 99, 14);
+    color: white;
+}
+
+.modalButton.cancel {
+    background-color: #ccc;
+    color: black;
+}

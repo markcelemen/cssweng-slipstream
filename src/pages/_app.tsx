@@ -1,5 +1,7 @@
+import "@/styles/employee-attendance.css";
 import "@fontsource/inter";
 import "@/styles/globals.css";
+
 import type { AppProps } from "next/app";
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import { useRouter } from "next/router";
