@@ -1,6 +1,7 @@
 import Papa, { ParseError } from "papaparse";
 import { AttendanceEntry, GFormEntry, EmployeeInfo } from "./attendanceTypes";
 import { computeEarlyDeduct, computeLateDeduct } from "./computeDeductions";
+import { info } from "console";
 
 /**
  * Parses the raw CSV text from a Google Form export into an array of GFormEntry objects.
@@ -62,11 +63,63 @@ export function parseGForm(text: string): GFormEntry[] {
  * @returns     A promise that resolves to an array of fully populated `AttendanceEntry` objects.
  */
 export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEntry[]> {
+    // converts the raw name strings into parsed objects
+    const parsedNames = data.map((row) => parseName(row.nameofemployee));
+
+    // removes duplicates by turning the parsed objects into a unique string key
+    const uniqueNameKeys = new Set<string>();
+    const employeeNameQueries: { lastName: string; firstName: string; middleInitial: string }[] = [];
+
+    parsedNames.forEach((n) => {
+        const key = `${n.lastName.toLowerCase()}|${n.firstName.toLowerCase()}|${n.middleInitial.toLowerCase()}`;
+        if (!uniqueNameKeys.has(key)) {
+            uniqueNameKeys.add(key);
+            employeeNameQueries.push(n);
+        }
+    });
+
+    // fetches the employees' details
+    const employeeInfoList = await fetchEmployeeInfo(employeeNameQueries);
+
+    // maps the employee details using a key consistent with parseName
+    const employeeInfoMap = new Map<string, EmployeeInfo>();
+    employeeInfoList.forEach((info) => {
+        const middleInitial = info.middleName 
+        ? info.middleName.trim().charAt(0).toLowerCase() 
+        : "";
+        const key = `${info.lastName.toLowerCase()}|${info.firstName.toLowerCase()}|${(middleInitial).toLowerCase()}`;
+        employeeInfoMap.set(key, info);
+    });
+
+
+    // ✅ now normalize each row
+    return data.map((row) => {
+        const parsedName = parseName(row.nameofemployee);
+        const lookupKey = `${parsedName.lastName.toLowerCase()}|${parsedName.firstName.toLowerCase()}|${parsedName.middleInitial.toLowerCase()}`;
+        const employeeInfo = employeeInfoMap.get(lookupKey);
+
+        const datetime = new Date(row.timestamp);
+        const middleInitial = employeeInfo?.middleName
+            ? employeeInfo.middleName.trim().charAt(0).toUpperCase() + "."
+            : "";
+        const employeeName = `${employeeInfo?.lastName ?? ""}, ${employeeInfo?.firstName ?? ""}${middleInitial ? " " + middleInitial : ""}`;
+
+        return {
+            datetime: datetime,
+            employeeID: employeeInfo?.employeeID ?? -999,
+            employeeName: employeeName,
+            lateDeduct: computeLateDeduct(datetime),
+            earlyDeduct: computeEarlyDeduct(datetime, employeeInfo?.salary ?? -999),
+            remarks: row.note
+        };
+    });
+
+/*
     // gets the employee names
     const employeeNames = Array.from(new Set(data.map((row) => row.nameofemployee)));
 
     // fetches the employees' details
-    const employeeInfoList = await fetchEmployeeInfo(employeeNames);
+    const employeeInfoList = await fetchEmployeeInfo(employeeNameQueries);
 
     // maps the employee details to their name
     const employeeInfoMap = new Map<string, EmployeeInfo>();
@@ -94,7 +147,31 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
             earlyDeduct,
             remarks
         }
-    });
+    });*/
+}
+
+/**
+ * Parses a full name string (formatted as "LastName, FirstName MiddleInitial.")
+ * into separate components: last name, first name, and middle initial.
+ * 
+ * @param fullName - The full name string to parse.
+ * @returns An object containing:
+ *  - `lastName`: The extracted last name.
+ *  - `firstName`: The extracted first name.
+ *  - `middleInitial`: The extracted middle initial (uppercase, without period). Empty string if none.
+ */
+function parseName(fullName: string): { lastName: string; firstName: string; middleInitial: string } {
+    // Expected format: "Lastname, Firstname M."
+    const [last, rest] = fullName.split(",").map(s => s.trim()); // split into ["Lastname", "Firstname M."]
+    const parts = rest.split(" ").map(s => s.trim()).filter(Boolean); // ["Firstname", "M."]
+    const first = parts[0] || "";
+    const middleInitial = parts[1] ? parts[1].replace(".", "") : ""; // remove period if any
+
+    return {
+        lastName: last,
+        firstName: first,
+        middleInitial: middleInitial.toUpperCase(),
+    };
 }
 
 /**
@@ -104,7 +181,7 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
  * @returns              A promise that resolves to an array of `EmployeeInfo` objects
  *                       containing the matched employee data.
  */
-async function fetchEmployeeInfo(employeeNames : string[]): Promise<EmployeeInfo[]>{
+async function fetchEmployeeInfo(employeeNames : {lastName: string, firstName: string, middleInitial: string}[]): Promise<EmployeeInfo[]>{
     // create post request
     const res = await fetch('api/attendance/completeGForm', {
         method: 'POST',

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { connectDB } from '../../../../models/mongodb';
 import { Employee } from '../../../../models/employeemodel';
 import { EmployeeInfo } from '../../../utils/attendance/attendanceTypes';
+import { MiddlewareNotFoundError } from 'next/dist/shared/lib/utils';
 
 /**
  * API route handler for fetching employee information.
@@ -40,9 +41,10 @@ export default async function handler(
 
         // maps the results to an EmployeeInfo object
         const result = employees.map((e : any) => ({
+            lastName: e.lastName,
+            firstName: e.firstName,
+            middleName: e.middleName,
             employeeID: e.employeeID,
-            employeeName: `${e.lastName}, ${e.firstName}${e.middleName ? " " + e.middleName
-                .trim().charAt(0).toUpperCase() + "." : ""}`,
             salary: e.totalSalary,
         }));
 

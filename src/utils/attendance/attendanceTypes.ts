@@ -28,7 +28,9 @@ export interface GLogEntry {
 }
 
 export interface EmployeeInfo {
-    employeeName: string;
+    lastName: string;
+    firstName: string;
+    middleName?: string;
     employeeID: number;
     salary: number;
 }

@@ -76,23 +76,23 @@ export async function normalizeGLog(data : GLogEntry[]): Promise<AttendanceEntry
 
     return data.map((row) => {
         const employeeInfo = employeeInfoMap.get(Number(row.enno));
+        
 
        // completes the fields of AttendanceEntry
         const datetime = new Date(`${row.datetime}`);
-        const employeeID = Number(row.enno);
-        const employeeName = employeeInfo?.employeeName ?? "";
-        const lateDeduct = computeLateDeduct(datetime);
-        const earlyDeduct = computeEarlyDeduct(datetime, employeeInfo?.salary ?? -999);
-        const remarks = "";
+        const middleInitial = employeeInfo?.middleName
+            ? employeeInfo.middleName.trim().charAt(0).toUpperCase() + "."
+            : "";
+        const employeeName = `${employeeInfo?.lastName ?? ""}, ${employeeInfo?.firstName ?? ""}${middleInitial ? " " + middleInitial : ""}`;
 
         // maps the results to an AttendanceEntry
         return {
-            datetime,
-            employeeID,
-            employeeName,
-            lateDeduct,
-            earlyDeduct,
-            remarks
+            datetime: datetime,
+            employeeID: Number(row.enno),
+            employeeName: employeeName,
+            lateDeduct: computeLateDeduct(datetime),
+            earlyDeduct: computeEarlyDeduct(datetime, employeeInfo?.salary ?? -999),
+            remarks: "",
         }
     });
 }
