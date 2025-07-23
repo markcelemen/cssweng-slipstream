@@ -50,7 +50,7 @@
 .slipstream {
   color: #47630e;
   font-family: "Montserrat-ExtraBold", Helvetica;
-  font-size: 42.75px;
+  font-size: 2.68rem;
   font-weight: 800;
   height: 90px;
   letter-spacing: 0;
@@ -79,7 +79,6 @@
   gap: 1vw;
   padding: 1vw;
   height: 4vh;
-  overflow: hidden;
   position: relative;
   width:100%;
 }
@@ -122,14 +121,164 @@
   position: relative;
 }
 
+.img:hover{
+  transform: scale(1.2);
+  transition: transform 100ms ease-in-out;
+}
+/*
+.filterbutton>.img:focus+.dropdownMenu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  
+}
+*/
+
+.dropdownMenu {
+  position: absolute;
+  padding: .75rem;
+  top: 100%;
+  right: 0;
+  margin-top: -1vh;
+  background-color: #FFFCD9;
+  color:#48630E ;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  min-width: fit-content;
+  
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: opacity 150ms ease-in-out,transform 150ms ease-in-out;
+  
+}
+.dropdownMenu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dropdownContent{
+  display: flex;
+  flex-direction: row;
+}
 .inputrea .img {
   height: auto;
   align-self: top;
   position: relative;
   width: 4vh;
 }
+.dropdownContent .FilterSide{
+width: 80%;
+height: 100%;
+padding: 1vw;
 
+}
+.dropdownContent .SortSide{
+gap:1vw;
+width: 40%;
+height: 100%;
+border-left: 0.20rem solid #DEDBBD;
+padding: 1vw;
+}
 
+.FilterSideHeader,
+.SortSideHeader
+{
+  font-family: "Inter-Bold", Helvetica;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #48630E ;
+  display: flex;
+  flex-direction: row;
+  gap:.5rem;
+  align-items: center;
+  height: 1vh;
+  margin-bottom: 3vh;
+  cursor: pointer;
+ 
+}
+.dropdownItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  cursor: pointer;
+  text-wrap: nowrap;
+}
+.dropdownItem:hover{
+  color: #719F0E;
+  transform: scale(1.03);
+  transition: transform 50ms ease-in-out;
+}
+.dropdownLabel {
+  align-self: center;
+  text-wrap: nowrap;
+  margin-right: 8px;
+  font-weight: 600;
+  color: #476520;
+  border: none;
+}
+.activeSortItem{
+  color: #68B3F0;
+  transform: scale(1.08);
+  
+}
+.dropdownInput {
+  border-bottom: 0.1rem solid #DEDBBD;
+  background-color: transparent;
+  
+  outline: none;
+
+  
+  
+}
+
+.sortbutton{
+  height: 1.5rem;
+  width: auto;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  
+}
+/*
+.sortbutton:focus{
+ -webkit-transform: scaleY(-1);
+  transform: scaleY(-1);
+}
+  */
+.sortbtnreal{
+filter: invert(31%) sepia(9%) saturate(6388%) hue-rotate(44deg) brightness(97%) contrast(89%);
+transition: transform 0.3s ease;
+}
+
+.up {
+  transform: scaleY(1);
+  transform: rotate(0deg); /* pointing up SORT ARROW*/
+}
+
+.down {
+  transform: scaleY(-1);
+  transform: rotate(180deg); /* flipped down SORT ARROW*/
+}
+
+.atoz{
+  
+  display: flex;
+  flex-direction: column-reverse;
+  font-family: "Inter-Bold", Helvetica;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding-left: .5rem;
+  position: relative;
+}
+
+.sortbutton:hover .sortbtnreal {
+  transform: translateY(-2px) scale(1.08);
+}
 .searchbar {
   height: 65px;
   margin-bottom: -8.00px;
@@ -187,31 +336,19 @@
   width: 100%;
 }
 
-.searchbtn {
-  height: 35px;
-  left:10px;
-  position: absolute;
-  top: 16px;
-  width:35px;
-}
 
-.filterdropdown {
-  height: 45px;
-  left: 775px;
-  position: absolute;
-  top: 10px;
-  width: 45px;
-}
+
+
 
 .logoutAndHelp {
   align-items: center;
   display: flex;
-  gap: 10px;
-  height: 90px;
-  justify-content: flex-end;
-  padding: 10px 50px;
+  gap: 1rem;
+  height: 100%;
+  justify-content: center;
+  padding: 2rem;
   position: relative;
-  width: 342px;
+  width: 30vw;
 }
 
 .logoutBtn {
@@ -225,7 +362,7 @@
   flex: 0 0 auto;
   gap: 0px;
   justify-content: flex-end;
-  padding: 14px 24px;
+  padding: 1rem;
   position: relative;
 }
 .logoutBtn:hover,
@@ -234,6 +371,7 @@
   box-shadow: 0px 2px 8px 2px #d4af37bb;
   transform: translateY(-2px) scale(1.04);
 }
+
 .helpBtn:hover,
 .helpBtn:focus {
   filter: brightness(2.3) saturate(1.5);
@@ -257,7 +395,7 @@
 .vector {
   height: auto;
   position: relative;
-  width: auto;
+  width: 1.3rem;
 }
 
 .bottom {
