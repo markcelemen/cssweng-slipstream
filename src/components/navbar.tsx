@@ -20,6 +20,7 @@ const Navbar = (): JSX.Element => {
   
 
   type FilterValue = {
+    label: string;
     operator?: string;
     type: string;
     value: string;
@@ -29,14 +30,15 @@ const Navbar = (): JSX.Element => {
   //filters is the object
   const ShowItemAndValue = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      e.preventDefault(); // Optional: prevent form submission
+      e.preventDefault();
       const message = Object.entries(filters)
-        .map(([label, data]) => {
+        .map(([_, data]) => {
           const op = data.operator || "=";
-          return `${label} ${op} ${data.value}`;
+          return `${data.label} ${op} ${data.value}`;
         })
         .join("\n");
-        console.log("Filters ||object on enter", filters);
+
+      console.log("Filters object on enter", filters);
       alert(message || "No filters applied.");
     }
   };
@@ -48,16 +50,17 @@ const Navbar = (): JSX.Element => {
 
   //removes special characters and numbers from text
   // also saves input of filters 
-  const handleInputChange = (label: string, type: string, value: string) => {
+  const handleInputChange = (idx: number, label: string, type: string, value: string) => {
     let filteredValue = value;
-    const operator = dropdownItems.filterItems.find(item => item.label === label)?.operator;
+    const operator = dropdownItems.filterItems[idx]?.operator;
     if (type === "text") {
       filteredValue = value.replace(/[^a-zA-Z\s]/g, "");
     }
 
     setFilters((prev) => ({
       ...prev,
-      [label]: {
+      [idx]: {
+        label,
         type,
         operator,
         value: filteredValue,
@@ -147,8 +150,8 @@ const Navbar = (): JSX.Element => {
                           className={styles.dropdownInput}
                           type={item.type === "number" ? "number" : "text"}
                           placeholder={item.type === "number" ? "Enter number" : "Enter text"}
-                          value={filters[item.label]?.value || ""}
-                          onChange={(e) => handleInputChange(item.label, item.type, e.target.value)}
+                          value={filters[idx]?.value || ""}
+                          onChange={(e) => handleInputChange(idx,item.label, item.type, e.target.value)}
                           onKeyDown={ShowItemAndValue}
                           
                         />
