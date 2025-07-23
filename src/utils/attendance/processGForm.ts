@@ -124,16 +124,35 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
  *  - `middleInitial`: The extracted middle initial (uppercase, without period). Empty string if none.
  */
 function parseName(fullName: string): { lastName: string; firstName: string; middleInitial: string } {
-    // Expected format: "Lastname, Firstname M."
+    // expected format: "Lastname, Firstname M."
     const [last, rest] = fullName.split(",").map(s => s.trim()); // split into ["Lastname", "Firstname M."]
     const parts = rest.split(" ").map(s => s.trim()).filter(Boolean); // ["Firstname", "M."]
-    const first = parts[0] || "";
-    const middleInitial = parts[1] ? parts[1].replace(".", "") : ""; // remove period if any
+    
+    let firstName = "";
+    let middleInitial = "";
+    
+    if (parts.length > 1) {
+        const possibleMiddle = parts[parts.length - 1];
+
+        // if the last part is a single letter with a period, treat as middle initial
+        if (/^[A-Za-z]\.$/.test(possibleMiddle)) {
+            middleInitial = possibleMiddle.replace(".", "").toUpperCase();
+            firstName = parts.slice(0, parts.length - 1).join(" ");
+        }
+        // otherwise, treat all parts as first name
+        else {
+            firstName = parts.join(" ");
+        }
+    }
+    // only one part = first name only
+    else {
+        firstName = parts[0] || "";
+    }
 
     return {
         lastName: last,
-        firstName: first,
-        middleInitial: middleInitial.toUpperCase(),
+        firstName: firstName,
+        middleInitial: middleInitial,
     };
 }
 
