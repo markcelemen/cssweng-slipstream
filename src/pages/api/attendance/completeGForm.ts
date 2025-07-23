@@ -24,7 +24,7 @@ export default async function handler(
         return res.status(405).json({ message: 'Method not allowed' })
     }
     // gets request body
-    const { employeeNames } = req.body as { employeeNames?: string[] };
+    const { employeeNames } = req.body as { employeeNames?: {lastName: string, firstName: string, middleInitial: string}[] };
 
     // checks input if invalid
     if (!employeeNames || !Array.isArray(employeeNames) || employeeNames.length === 0) {
@@ -33,10 +33,13 @@ export default async function handler(
 
     try {
         await connectDB();
-
         // fetches data from database
-        const employees = await Employee.find({ employeeName: {$in: employeeNames} })
-        .select('employeeID lastName firstName middleName totalSalary');
+        const employees = await Employee.find({$or: employeeNames.map(e => ({
+            lastName: e.lastName,
+            firstName: e.firstName,
+            middleName: new RegExp(`^${e.middleInitial}`, "i") // matches middle initial
+            }))
+        }).select('employeeID lastName firstName middleName totalSalary');
 
         // maps the results to an EmployeeInfo object
         const result = employees.map((e : any) => ({

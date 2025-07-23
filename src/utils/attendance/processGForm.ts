@@ -77,7 +77,6 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
             employeeNameQueries.push(n);
         }
     });
-console.log("Employee name queries: ", employeeNameQueries);
     // fetches the employees' details
     const employeeInfoList = await fetchEmployeeInfo(employeeNameQueries);
 
@@ -90,9 +89,8 @@ console.log("Employee name queries: ", employeeNameQueries);
         const key = `${info.lastName.toLowerCase()}|${info.firstName.toLowerCase()}|${(middleInitial).toLowerCase()}`;
         employeeInfoMap.set(key, info);
     });
-console.log("Employee info map: ", employeeInfoMap);
 
-    // ✅ now normalize each row
+    // normalizes each row
     return data.map((row) => {
         const parsedName = parseName(row.nameofemployee);
         const lookupKey = `${parsedName.lastName.toLowerCase()}|${parsedName.firstName.toLowerCase()}|${parsedName.middleInitial.toLowerCase()}`;
@@ -113,41 +111,6 @@ console.log("Employee info map: ", employeeInfoMap);
             remarks: row.note
         };
     });
-
-/*
-    // gets the employee names
-    const employeeNames = Array.from(new Set(data.map((row) => row.nameofemployee)));
-
-    // fetches the employees' details
-    const employeeInfoList = await fetchEmployeeInfo(employeeNameQueries);
-
-    // maps the employee details to their name
-    const employeeInfoMap = new Map<string, EmployeeInfo>();
-    employeeInfoList.forEach((info) => {
-        employeeInfoMap.set(info.employeeName, info);
-    });
-
-    return data.map((row) => {
-       const employeeInfo = employeeInfoMap.get(row.nameofemployee);
-
-       // completes the fields of AttendanceEntry
-        const datetime = new Date(`${row.timestamp}`);
-        const employeeID = employeeInfo?.employeeID ?? 0; // find alternative for default
-        const employeeName = row.nameofemployee;
-        const lateDeduct = computeLateDeduct(datetime);
-        const earlyDeduct = computeEarlyDeduct(datetime, employeeInfo?.salary ?? -999)
-        const remarks = row.note;
-
-        // maps the results to an AttendanceEntry
-        return {
-            datetime,
-            employeeID,
-            employeeName,
-            lateDeduct,
-            earlyDeduct,
-            remarks
-        }
-    });*/
 }
 
 /**
