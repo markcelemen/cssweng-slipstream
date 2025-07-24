@@ -32,9 +32,9 @@ const Navbar = (): JSX.Element => {
     if (e.key === "Enter") {
       e.preventDefault();
       const message = Object.entries(filters)
-        .map(([_, data]) => {
+        .map(([idx, data]) => {
           const op = data.operator || "=";
-          return `${data.label} ${op} ${data.value}`;
+          return `${idx}${data.label} ${op} ${data.value}`;
         })
         .join("\n");
 
@@ -55,6 +55,9 @@ const Navbar = (): JSX.Element => {
     const operator = dropdownItems.filterItems[idx]?.operator;
     if (type === "text") {
       filteredValue = value.replace(/[^a-zA-Z\s]/g, "");
+    }
+    if (type === "text2") {
+      filteredValue = value;
     }
 
     setFilters((prev) => ({
@@ -292,11 +295,11 @@ const Navbar = (): JSX.Element => {
               className={`
                 ${styles.navButton}
                 ${styles.textWrapper5}
-                ${router.pathname === "/payslip-generator" ? styles.active : ""}
+                ${router.pathname === "/attendancelogtable" ? styles.active : ""}
               `}
-              onClick={() => router.push("/payslip-generator")}
+              onClick={() => router.push("/attendancelogtable")}
             >
-              Payslip Generator
+              Attendance Log
             </button>
           </div>
           <div className={styles.frame}>
