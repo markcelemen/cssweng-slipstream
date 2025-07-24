@@ -6,7 +6,7 @@ import { requireAuth } from "@/utils/authGuard";
 
 const EmployeePage = () => {
   return (
-    <Box display="flex" minH="100vh" maxH="100vh"> {/* insert rainbow bg and edit the opacity. bg color is white and appears on some cases. */ }
+    <Box display="flex" minH="100vh" maxH="100vh"> 
       <EmployeeTable />
     </Box>
   );
