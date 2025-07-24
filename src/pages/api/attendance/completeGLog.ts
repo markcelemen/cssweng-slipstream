@@ -2,11 +2,12 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { connectDB } from '../../../../models/mongodb';
 import { Employee } from '../../../../models/employeemodel';
 import { EmployeeInfo } from '../../../utils/attendance/attendanceTypes';
+import { MiddlewareNotFoundError } from 'next/dist/shared/lib/utils';
 
 /**
  * API route handler for fetching employee information.
  * 
- * Expects a request containing employee names in the body,
+ * Expects a request containing employee ids in the body,
  * queries the database for matching employee records, and responds with an array of
  * `EmployeeInfo` objects. If an error occurs, responds with an error message.
  *
@@ -24,22 +25,19 @@ export default async function handler(
         return res.status(405).json({ message: 'Method not allowed' })
     }
     // gets request body
-    const { employeeNames } = req.body as { employeeNames?: {lastName: string, firstName: string, middleInitial: string}[] };
+    const { employeeIDs } = req.body as { employeeIDs?: string[] };
 
     // checks input if invalid
-    if (!employeeNames || !Array.isArray(employeeNames) || employeeNames.length === 0) {
+    if (!employeeIDs || !Array.isArray(employeeIDs) || employeeIDs.length === 0) {
         return res.status(400).json({ message: 'Invalid input' });
     }
 
     try {
         await connectDB();
+
         // fetches data from database
-        const employees = await Employee.find({$or: employeeNames.map(e => ({
-            lastName: e.lastName,
-            firstName: e.firstName,
-            middleName: new RegExp(`^${e.middleInitial}`, "i") // matches middle initial
-            }))
-        }).select('employeeID lastName firstName middleName totalSalary');
+        const employees = await Employee.find({ employeeID: {$in: employeeIDs} })
+        .select('employeeID lastName firstName middleName totalSalary');
 
         // maps the results to an EmployeeInfo object
         const result = employees.map((e : any) => ({
