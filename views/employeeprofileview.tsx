@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Button,
@@ -8,10 +8,65 @@ import {
   Text,
   Textarea,
   VStack,
-  HStack
+  HStack,
 } from '@chakra-ui/react';
+import { useToast } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
 
-const EmployeeProfileView = () => {
+interface Employee {
+  employeeID: number;
+  lastName: string;
+  firstName: string;
+  middleName: string;
+  department: string;
+  coordinator: string;
+  position: string;
+  contactInfo: string;
+  email: string;
+  totalSalary: number;
+  basicSalary: number;
+  birthdate?: string;
+  numberOfPTOs?: number;
+  remarks?: string;
+}
+
+
+const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [originalEmployee, setOriginalEmployee] = useState<Employee | null>(null);
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(employee) !== JSON.stringify(originalEmployee);
+  }, [employee, originalEmployee]);
+  const toast = useToast();
+  const [prevID, setPrevID] = useState<number | null>(null);
+  const [nextID, setNextID] = useState<number | null>(null);
+
+  
+
+  useEffect(() => {
+  fetch(`/api/employees/${id}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setEmployee(data);
+      setOriginalEmployee(data);
+    });
+
+  fetch('/api/employees/ids')
+    .then((res) => res.json())
+    .then((ids: number[]) => {
+      const currentID = Number(id);
+      const sorted = ids.sort((a, b) => a - b);
+
+      const prev = sorted.filter(eid => eid < currentID).pop() || null;
+      const next = sorted.find(eid => eid > currentID) || null;
+
+      setPrevID(prev);
+      setNextID(next);
+    });
+}, [id]);
+
+
+
   return (
     <Box bg="FAF6C7" minH="100vh" w="100vw" p="6">
       <Flex gap="6" w="100%" align="flex-start">
@@ -37,16 +92,32 @@ const EmployeeProfileView = () => {
           </Box>
 
           <Text color="#638813" fontWeight="bold" mb="2">
-            Employee Name <b style={{ float: 'right' }}>ID Placeholder</b>
+            Employee Name <b style={{ float: 'right' }}>{id}</b>
           </Text>
 
           <VStack align="stretch" spacing="3">
             <HStack>
-              <Input placeholder="Last Name" bg="#FFFCD9" border="1px solid #A4B465" />
-              <Input placeholder="First Name" bg="#FFFCD9" border="1px solid #A4B465" />
+              <Input
+                  value={employee?.lastName || ''}
+                  onChange={(e) => setEmployee(emp => emp ? { ...emp, lastName: e.target.value } : emp)}
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                />
+              <Input
+                value={employee?.firstName || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, firstName: e.target.value } : emp)}
+                bg="#FFFCD9"
+                border="1px solid #A4B465"
+              />
             </HStack>
             <HStack>
-              <Input placeholder="Middle Name" bg="#FFFCD9" border="1px solid #A4B465" w="70%" />
+              <Input
+                value={employee?.middleName || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, middleName: e.target.value } : emp)}
+                bg="#FFFCD9"
+                w="70%"
+                border="1px solid #A4B465"
+              />
               <Text fontSize="sm" color="gray.600" w="30%">
                 (optional)
               </Text>
@@ -54,15 +125,34 @@ const EmployeeProfileView = () => {
 
             <HStack>
               <Text minW="120px" fontWeight="semibold" color="#638813">Date of Birth</Text>
-              <Input placeholder="MM/DD/YY" bg="#FFFCD9" border="1px solid #A4B465" w="60%" />
+              <Input
+                value={employee?.birthdate || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, birthdate: e.target.value } : emp)}
+                placeholder="MM/DD/YY"
+                bg="#FFFCD9"
+                border="1px solid #A4B465"
+                w="60%"
+              />
             </HStack>
             <HStack>
               <Text minW="120px" fontWeight="semibold" color="#638813">Email</Text>
-              <Input placeholder="supercoolemail@gmail.com" bg="#FFFCD9" border="1px solid #A4B465" w="60%" />
+              <Input
+                value={employee?.email || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, email: e.target.value } : emp)}
+                bg="#FFFCD9"
+                border="1px solid #A4B465"
+                w="60%"
+              />
             </HStack>
             <HStack>
               <Text minW="120px" fontWeight="semibold" color="#638813">Phone Number</Text>
-              <Input placeholder="09XXXXXXXXX" bg="#FFFCD9" border="1px solid #A4B465" w="60%" />
+              <Input
+                value={employee?.contactInfo || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, contactInfo: e.target.value } : emp)}
+                bg="#FFFCD9"
+                border="1px solid #A4B465"
+                w="60%"
+              />
             </HStack>
           </VStack>
 
@@ -70,14 +160,37 @@ const EmployeeProfileView = () => {
             <Text color="#638813" fontWeight="bold" mb="1">
               Remarks:
             </Text>
-            <Textarea bg="#FFFCD9" border="1px solid #A4B465" h="230px" />
+            <Textarea
+              value={employee?.remarks || ''}
+              onChange={(e) =>
+                setEmployee(emp => emp ? { ...emp, remarks: e.target.value } : emp)
+              }
+              bg="#FFFCD9"
+              border="1px solid #A4B465"
+              h="230px"
+            />
           </Box>
 
-          <HStack mt="6" justify="space-between">
-            <Button size="sm" bg="#4A6100" color="#FFCF50" _hover={{ bg: '#3A4E00' }}>
+          <HStack mt="6" justify="space-between" w="100%">
+            <Button
+              size="sm"
+              bg="#4A6100"
+              color="#FFCF50"
+              _hover={{ bg: '#3A4E00' }}
+              onClick={() => window.location.href = `/employeeprofile/${prevID}`}
+              visibility={prevID ? 'visible' : 'hidden'}
+            >
               Prev Employee
             </Button>
-            <Button size="sm" bg="#4A6100" color="#FFCF50" _hover={{ bg: '#3A4E00' }}>
+
+            <Button
+              size="sm"
+              bg="#4A6100"
+              color="#FFCF50"
+              _hover={{ bg: '#3A4E00' }}
+              onClick={() => window.location.href = `/employeeprofile/${nextID}`}
+              visibility={nextID ? 'visible' : 'hidden'}
+            >
               Next Employee
             </Button>
           </HStack>
@@ -128,46 +241,118 @@ const EmployeeProfileView = () => {
           </HStack>
 
           <Box p="6" position="relative" flex="1" display="flex" flexDirection="column">
-            <Text
-              position="absolute"
-              top="1.5rem"
-              right="1.5rem"
-              color="#7E8854"
-              fontSize="md"
-              fontWeight="semibold"
-            >
-              You have made changes to some fields
-            </Text>
+            {hasChanges && (
+              <Text
+                position="absolute"
+                top="1.5rem"
+                right="1.5rem"
+                color="#7E8854"
+                fontSize="md"
+                fontWeight="semibold"
+              >
+                You have made changes to some fields
+              </Text>
+            )}
 
             <VStack align="stretch" spacing="4" mt="8">
               <HStack>
                 <Text minW="150px" fontWeight="semibold" color="#638813">
                   Basic Salary
                 </Text>
-                <Input w="30%" placeholder="₱100,000,000" bg="white" />
+                <Input
+                  value={employee?.basicSalary || ''}
+                  onChange={(e) => setEmployee(emp => emp ? { ...emp, basicSalary: Number(e.target.value) } : emp)}
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                  w="30%"
+                />
               </HStack>
               <HStack>
                 <Text minW="150px" fontWeight="semibold" color="#638813">
                   Total Salary
                 </Text>
-                <Input w="30%" placeholder="₱100,000,000" bg="white" />
+                <Input
+                  value={employee?.totalSalary || ''}
+                  onChange={(e) => setEmployee(emp => emp ? { ...emp, totalSalary: Number(e.target.value) } : emp)}
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                  w="30%"
+                />
               </HStack>
               <HStack>
                 <Text minW="150px" fontWeight="semibold" color="#638813">
                   Department
                 </Text>
-                <Input w="30%" placeholder="Department" bg="white" />
+                <Input
+                  value={employee?.department || ''}
+                  onChange={(e) => setEmployee(emp => emp ? { ...emp, department: e.target.value } : emp)}
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                  w="30%"
+                />
               </HStack>
               <HStack>
                 <Text minW="150px" fontWeight="semibold" color="#638813">
                   Number of PTO’s
                 </Text>
-                <Input w="30%" placeholder="Number (increments of .5)" bg="white" />
+                <Input
+                  value={employee?.numberOfPTOs ?? 0}
+                  onChange={(e) =>
+                    setEmployee(emp => emp ? { ...emp, numberOfPTOs: Number(e.target.value) } : emp)
+                  }
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                  w="30%"
+                />
               </HStack>
             </VStack>
 
             <HStack justify="flex-end" mt="auto">
-              <Button bg="#4A6100" color="white" _hover={{ bg: '#3A4E00' }}>
+              <Button
+                bg="#4A6100"
+                color="white"
+                _hover={{ bg: '#3A4E00' }}
+                onClick={() => {
+                  if (!employee) return;
+                  
+                  fetch('/api/employees/update', {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      employeeIDs: [employee.employeeID],
+                      updates: employee,
+                    }),
+                  })
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.success) {
+                        toast({
+                        title: 'Saved!',
+                        description: 'Employee profile updated successfully.',
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true,
+                        position: 'top',
+                      });
+                      setOriginalEmployee({ ...employee });
+                      } else {
+                        toast({
+                        title: 'Error!',
+                        description: 'Employee profile has not been updated successfully.',
+                        status: 'error',
+                        duration: 3000,
+                        isClosable: true,
+                        position: 'top',
+                      });
+                      }
+                    })
+                    .catch(err => {
+                      console.error('Network error:', err);
+                    });
+                }}
+              >
                 Save
               </Button>
               <Button
@@ -175,6 +360,19 @@ const EmployeeProfileView = () => {
                 color="#4A6100"
                 border="1px solid #4A6100"
                 _hover={{ bg: '#F6F4CF' }}
+                onClick={() => {
+                  if (originalEmployee) {
+                    setEmployee({ ...originalEmployee });
+                    toast({
+                        title: 'Cancelled changes',
+                        description: 'Employee fields has been reset.',
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true,
+                        position: 'top',
+                      });
+                  }
+                }}
               >
                 Cancel
               </Button>
