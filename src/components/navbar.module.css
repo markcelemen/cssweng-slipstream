@@ -538,13 +538,14 @@ transition: transform 0.3s ease;
 
 .navButton:hover,
 .navButton:focus {
-  color: #fffbe5;
+  color: #f5edc3;
  /* border-bottom: 2px solid #ffd566;*/
   outline: none;
 }
 
 .active {
-  color: #b69c0c;
-  border-bottom: 5px solid #f4c33d;
+  color: #f5edc3;
+  border-bottom: 5px solid #8b6a16;
   font-weight: 700;
+  
 }

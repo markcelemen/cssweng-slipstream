@@ -307,7 +307,7 @@ const Navbar = (): JSX.Element => {
               className={`
                 ${styles.navButton}
                 ${styles.textWrapper6}
-                ${router.pathname === "/payslip-view" ? styles.active : ""}
+                ${router.pathname === "/employeeemailer" ? styles.active : ""}
               `}
               onClick={() => router.push("/employeeemailer")}
             >

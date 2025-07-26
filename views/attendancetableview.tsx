@@ -10,15 +10,22 @@ import {
   Th,
   Td,
   Input,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import React, { useRef, useState, useEffect } from "react";
 import { 
   useTableSelectionPagination, 
   useTablePaginationInput 
 } from "../src/utils/attendance/tableSelectionPagination";
 
-//LOG OBJECT(row)
 type Log = {
   id: number;
   date: string;
@@ -36,11 +43,63 @@ const ROWS_PER_PAGE = 20;
 
 const AttendanceTableView = () => {
   const [logs, setLogs] = useState<Log[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; row: number } | null>(null);
   const outerWrapperRef = useRef<HTMLDivElement>(null);
 
-  //SAMPLE DATA
+  //Modal
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [newLog, setNewLog] = useState<Log>({
+    id: 0,
+    date: "",
+    time: "",
+    employeeID: 0,
+    lastName: "",
+    firstName: "",
+    middleName: "",
+    position: "",
+    contactNo: "",
+    email: "",
+  });
+
+  //Selection and pagination logic
+  const {
+    selectedRows,
+    setSelectedRows,
+    setSelectRangeInputs,
+    selectRangeInputs,
+    currentPageClamped,
+    totalPages,
+    startIdx,
+    pageData: pageLogs,
+    handleRangeChange,
+    handleRowClick,
+    handleGoToPage,
+    shiftAnchorRef,
+    tableBoxRef, 
+    inputBoxRef, 
+  } = useTableSelectionPagination<Log>(logs, ROWS_PER_PAGE);
+
+  // Pagination input
+  const {
+    pageInput,
+    handlePageInputChange,
+    handlePageInputBlur,
+    handlePageInputKeyDown,
+  } = useTablePaginationInput(currentPageClamped, totalPages, handleGoToPage);
+
+  const handleContextMenu = (localIndex: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const globalIdx = startIdx + localIndex;
+    if (!selectedRows.includes(globalIdx)) {
+      setSelectedRows([globalIdx]);
+    }
+    setContextMenu({ x: e.clientX, y: e.clientY, row: globalIdx });
+  };
+
+  //Sample Data
   useEffect(() => {
-    
     const mockLogs: Log[] = Array.from({ length: 30 }, (_, i) => ({
       id: i + 1,
       date: `2023-05-${String(Math.floor(i / 10) + 1).padStart(2, '0')}`,
@@ -56,37 +115,77 @@ const AttendanceTableView = () => {
     setLogs(mockLogs);
   }, []);
 
- 
-  const {
-    selectedRows,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    setSelectedRows,
-    selectRangeInputs,
-    currentPageClamped,
-    totalPages,
-    startIdx,
-    pageData: pageLogs,
-    handleRangeChange,
-    handleRowClick,
-    handleGoToPage,
-    tableBoxRef, 
-    inputBoxRef, 
-  } = useTableSelectionPagination<Log>(logs, ROWS_PER_PAGE);
+  const handleAddLog = () => {
+    alert(`Adding new log:\n${JSON.stringify(newLog, null, 2)}`);
+    const updatedLogs = [...logs, {
+      ...newLog,
+      id: logs.length + 1
+    }];
+    setLogs(updatedLogs);
+    setNewLog({
+      id: 0,
+      date: "",
+      time: "",
+      employeeID: 0,
+      lastName: "",
+      firstName: "",
+      middleName: "",
+      position: "",
+      contactNo: "",
+      email: "",
+    });
+    onClose();
+  };
 
-  //pagination input
-  const {
-    pageInput,
-    handlePageInputChange,
-    handlePageInputBlur,
-    handlePageInputKeyDown,
-  } = useTablePaginationInput(currentPageClamped, totalPages, handleGoToPage);
+  const handleUpdateLog = () => {
+    const selectedLogs = selectedRows.map(idx => logs[idx]);
+    alert(`Updating logs:\n${JSON.stringify(selectedLogs, null, 2)}\nWith new values:\n${JSON.stringify(newLog, null, 2)}`);
+    const updatedLogs = logs.map(log => 
+      selectedRows.includes(logs.indexOf(log)) ? { ...log, ...newLog } : log
+    );
+    setLogs(updatedLogs);
+    setSelectedRows([]);
+    onClose();
+    setIsEditing(false);
+  };
 
+  //DESELECT CONTEXT MENU WHEN CLICKING OUTSIDE MENU
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (contextMenu) {
+        const menu = document.getElementById("custom-context-menu");
+        if (menu && !menu.contains(e.target as Node)) {
+          setContextMenu(null);
+        }
+      }
+    };
+    window.addEventListener("mousedown", handleClick);
+    return () => window.removeEventListener("mousedown", handleClick);
+  }, [contextMenu]);
 
-  //RENDER///RENDER REDNERDERREND
   return (
     <Box minH="100vh" width="100vw" display="flex" flexDirection="column" justifyContent="space-between" ref={outerWrapperRef}>
       <Box className="employee-table-container">
         <Flex align="center" gap="2" mb={2}>
+          <Button
+            leftIcon={<AddIcon boxSize={4} />}
+            size="sm"
+            bg="#FEFAD6"
+            color="#626F47"
+            fontWeight="bold"
+            fontSize="md"
+            borderRadius="xl"
+            boxShadow="2px 2px 2px 0px #00000030"
+            _hover={{
+              bg: "#E6E2B1",
+              color: "#626F47",
+            }}
+            px={6}
+            py={3}
+            onClick={onOpen}
+          >
+            Add Log
+          </Button>
           <Box ref={inputBoxRef} display="inline-block" className="select-rows-label">
             Select rows:{" "}
             <Input
@@ -156,6 +255,7 @@ const AttendanceTableView = () => {
                       userSelect: "none",
                     }}
                     onClick={(e) => handleRowClick(localIdx, e)}
+                    onContextMenu={(e) => handleContextMenu(localIdx, e)}
                   >
                     <Td textAlign="center">{globalIdx + 1}</Td>
                     <Td textAlign="center">{log.date}</Td>
@@ -172,8 +272,66 @@ const AttendanceTableView = () => {
               })}
             </Tbody>
           </Table>
+          
+          {contextMenu && (
+            <Box
+              id="custom-context-menu"
+              position="fixed"
+              top={contextMenu.y}
+              left={contextMenu.x}
+              zIndex={9999}
+              bg="#FFD566"
+              borderRadius="md"
+              boxShadow="md"
+              p={2}
+              minW="140px"
+            >
+              <Button 
+                size="sm" 
+                w="100%" 
+                mb={1} 
+                onClick={() => {
+                  setIsEditing(true);
+                  setNewLog({
+                    id: 0,
+                    date: "",
+                    time: "",
+                    employeeID: 0,
+                    lastName: "",
+                    firstName: "",
+                    middleName: "",
+                    position: "",
+                    contactNo: "",
+                    email: "",
+                  });
+                  onOpen();
+                  setContextMenu(null);
+                }}
+              >
+                Edit Selected ({selectedRows.length})
+              </Button>
+              <Button
+                size="sm"
+                colorScheme="red"
+                w="100%"
+                onClick={() => {
+                  const selectedLogs = selectedRows.map(idx => logs[idx]);
+                  alert(`Deleting logs:\n${JSON.stringify(selectedLogs, null, 2)}`);
+                  const remainingLogs = logs.filter((_, idx) => !selectedRows.includes(idx));
+                  setLogs(remainingLogs);
+                  setSelectedRows([]);
+                  setSelectRangeInputs(["", ""]);
+                  shiftAnchorRef.current = null;
+                  setContextMenu(null);
+                }}
+              >
+                Delete Selected ({selectedRows.length})
+              </Button>
+            </Box>
+          )}
         </Box>
       </Box>
+      
       {/* Pagination Controls */}
       <Flex
         position="fixed"
@@ -226,6 +384,49 @@ const AttendanceTableView = () => {
           onClick={() => handleGoToPage(currentPageClamped + 1)}
         />
       </Flex>
+      
+      {/* Add/Edit Modal */}
+      <Modal isOpen={isOpen} onClose={() => {
+        setIsEditing(false);
+        onClose();
+      }}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>{isEditing ? "Edit Log" : "Add Log"}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {Object.entries(newLog).map(([field, value]) => (
+              <Box key={field} mb={2}>
+                <Input
+                  size="sm"
+                  placeholder={field}
+                  value={value}
+                  onChange={(e) =>
+                    setNewLog((log) => ({
+                      ...log,
+                      [field]: ["id", "employeeID"].includes(field)
+                        ? Number(e.target.value)
+                        : e.target.value,
+                    }))
+                  }
+                  type={["id", "employeeID"].includes(field) ? "number" : "text"}
+                />
+              </Box>
+            ))}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={isEditing ? handleUpdateLog : handleAddLog}>
+              {isEditing ? "Update" : "Add"}
+            </Button>
+            <Button onClick={() => {
+              setIsEditing(false);
+              onClose();
+            }}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
