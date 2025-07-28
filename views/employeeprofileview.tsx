@@ -98,12 +98,14 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
           <VStack align="stretch" spacing="3">
             <HStack>
               <Input
+                  placeholder="Last Name"
                   value={employee?.lastName || ''}
                   onChange={(e) => setEmployee(emp => emp ? { ...emp, lastName: e.target.value } : emp)}
                   bg="#FFFCD9"
                   border="1px solid #A4B465"
                 />
               <Input
+                placeholder="First Name"
                 value={employee?.firstName || ''}
                 onChange={(e) => setEmployee(emp => emp ? { ...emp, firstName: e.target.value } : emp)}
                 bg="#FFFCD9"
@@ -112,6 +114,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
             </HStack>
             <HStack>
               <Input
+                placeholder="Middle Name"
                 value={employee?.middleName || ''}
                 onChange={(e) => setEmployee(emp => emp ? { ...emp, middleName: e.target.value } : emp)}
                 bg="#FFFCD9"
@@ -128,7 +131,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
               <Input
                 value={employee?.birthdate || ''}
                 onChange={(e) => setEmployee(emp => emp ? { ...emp, birthdate: e.target.value } : emp)}
-                placeholder="MM/DD/YY"
+                placeholder="MM/DD/YYYY"
                 bg="#FFFCD9"
                 border="1px solid #A4B465"
                 w="60%"
@@ -137,6 +140,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
             <HStack>
               <Text minW="120px" fontWeight="semibold" color="#638813">Email</Text>
               <Input
+                placeholder="sample@gmail.com"
                 value={employee?.email || ''}
                 onChange={(e) => setEmployee(emp => emp ? { ...emp, email: e.target.value } : emp)}
                 bg="#FFFCD9"
@@ -147,6 +151,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
             <HStack>
               <Text minW="120px" fontWeight="semibold" color="#638813">Phone Number</Text>
               <Input
+                placeholder="Phone Number"
                 value={employee?.contactInfo || ''}
                 onChange={(e) => setEmployee(emp => emp ? { ...emp, contactInfo: e.target.value } : emp)}
                 bg="#FFFCD9"
@@ -161,6 +166,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
               Remarks:
             </Text>
             <Textarea
+              placeholder="Sample Remarks..."
               value={employee?.remarks || ''}
               onChange={(e) =>
                 setEmployee(emp => emp ? { ...emp, remarks: e.target.value } : emp)
@@ -260,7 +266,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
                   Basic Salary
                 </Text>
                 <Input
-                  value={employee?.basicSalary || ''}
+                  value={employee?.basicSalary}
                   onChange={(e) => setEmployee(emp => emp ? { ...emp, basicSalary: Number(e.target.value) } : emp)}
                   bg="#FFFCD9"
                   border="1px solid #A4B465"
@@ -272,7 +278,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
                   Total Salary
                 </Text>
                 <Input
-                  value={employee?.totalSalary || ''}
+                  value={employee?.totalSalary}
                   onChange={(e) => setEmployee(emp => emp ? { ...emp, totalSalary: Number(e.target.value) } : emp)}
                   bg="#FFFCD9"
                   border="1px solid #A4B465"
@@ -284,6 +290,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
                   Department
                 </Text>
                 <Input
+                  placeholder="Sample Department"
                   value={employee?.department || ''}
                   onChange={(e) => setEmployee(emp => emp ? { ...emp, department: e.target.value } : emp)}
                   bg="#FFFCD9"
@@ -313,22 +320,97 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
                 color="white"
                 _hover={{ bg: '#3A4E00' }}
                 onClick={() => {
-                  if (!employee) return;
-                  
-                  fetch('/api/employees/update', {
-                    method: 'PUT',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      employeeIDs: [employee.employeeID],
-                      updates: employee,
-                    }),
-                  })
-                    .then(res => res.json())
-                    .then(data => {
-                      if (data.success) {
-                        toast({
+                if (!employee) return;
+
+                const requiredFields: { key: keyof Employee; label: string }[] = [
+                  { key: "firstName", label: "First Name" },
+                  { key: "lastName", label: "Last Name" },
+                  { key: "department", label: "Department" },
+                  { key: "position", label: "Position" },
+                  { key: "contactInfo", label: "Contact Number" },
+                  { key: "email", label: "Email" },
+                ];
+
+                for (const { key, label } of requiredFields) {
+                  const value = employee[key];
+                  if (typeof value === "string" && value.trim() === "") {
+                    toast({
+                      title: "Missing Required Field",
+                      description: `${label} is required.`,
+                      status: "error",
+                      duration: 4000,
+                      isClosable: true,
+                      position: "top",
+                    });
+                    return;
+                  }
+                }
+
+                if (!/^\d+$/.test(employee.contactInfo)) {
+                  toast({
+                    title: "Invalid Contact Number",
+                    description: "Contact number must contain only digits.",
+                    status: "error",
+                    duration: 4000,
+                    isClosable: true,
+                    position: "top",
+                  });
+                  return;
+                }
+
+                if (
+                  employee.birthdate &&
+                  !/^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/.test(employee.birthdate)
+                ) {
+                  toast({
+                    title: "Invalid Birthdate",
+                    description: "Birthdate must be in MM/DD/YYYY format.",
+                    status: "error",
+                    duration: 4000,
+                    isClosable: true,
+                    position: "top",
+                  });
+                  return;
+                }
+
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employee.email)) {
+                  toast({
+                    title: "Invalid Email",
+                    description: "Please enter a valid email address.",
+                    status: "error",
+                    duration: 4000,
+                    isClosable: true,
+                    position: "top",
+                  });
+                  return;
+                }
+
+                if (employee.totalSalary < 0 || employee.basicSalary < 0) {
+                  toast({
+                    title: "Negative Salary",
+                    description: "Total or Basic salary cannot be negative.",
+                    status: "error",
+                    duration: 4000,
+                    isClosable: true,
+                    position: "top",
+                  });
+                  return;
+                }
+
+                fetch('/api/employees/update', {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    employeeIDs: [employee.employeeID],
+                    updates: employee,
+                  }),
+                })
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data.success) {
+                      toast({
                         title: 'Saved!',
                         description: 'Employee profile updated successfully.',
                         status: 'success',
@@ -337,8 +419,8 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
                         position: 'top',
                       });
                       setOriginalEmployee({ ...employee });
-                      } else {
-                        toast({
+                    } else {
+                      toast({
                         title: 'Error!',
                         description: 'Employee profile has not been updated successfully.',
                         status: 'error',
@@ -346,12 +428,12 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
                         isClosable: true,
                         position: 'top',
                       });
-                      }
-                    })
-                    .catch(err => {
-                      console.error('Network error:', err);
-                    });
-                }}
+                    }
+                  })
+                  .catch(err => {
+                    console.error('Network error:', err);
+                  });
+              }}
               >
                 Save
               </Button>
