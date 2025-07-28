@@ -362,6 +362,72 @@ const EmployeeTable = () => {
     }
   });
 
+  for (const [key, value] of Object.entries(updates)) {
+    if (
+      typeof value === "string" &&
+      !["middleName"].includes(key) &&
+      value.trim() === ""
+    ) {
+      toast({
+        title: "Missing Required Field",
+        description: `${key} is required.`,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (key === "contactInfo" && typeof value === "string" && !/^\d+$/.test(value)) {
+      toast({
+        title: "Invalid Contact Number",
+        description: "Contact number must contain only digits.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (key === "email" && typeof value === "string" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (
+      (key === "totalSalary" || key === "basicSalary") &&
+      typeof value === "number" &&
+      value < 0
+    ) {
+      toast({
+        title: "Invalid Salary",
+        description: `${key} cannot be negative.`,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (key === "employeeID") {
+      toast({
+        title: "Employee ID Not Editable",
+        description: "You cannot modify the Employee ID.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+  }
+
+
   if (Object.keys(updates).length === 0) {
     alert("No fields changed.");
     return;
