@@ -1,640 +1,387 @@
-import React, { useState, useRef, useEffect } from 'react';
-import styles from '../src/styles/employeeprofile.module.css';
+import React, { useMemo } from 'react';
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Input,
+  Text,
+  Textarea,
+  VStack,
+  HStack,
+} from '@chakra-ui/react';
+import { useToast } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
 
-interface Field {
-  id: string;
-  label: string;
-  value: string;
+interface Employee {
+  employeeID: number;
+  lastName: string;
+  firstName: string;
+  middleName: string;
+  department: string;
+  coordinator: string;
+  position: string;
+  contactInfo: string;
+  email: string;
+  totalSalary: number;
+  basicSalary: number;
+  birthdate?: string;
+  numberOfPTOs?: number;
+  remarks?: string;
 }
 
-interface CitizenshipField {
-  id: string;
-  value: string;
-}
 
-const EmployeeProfile: React.FC = () => {
-  const [profileImage, setProfileImage] = useState<string>('/transparent-background.jpg');
-  const [citizenshipFields, setCitizenshipFields] = useState<CitizenshipField[]>([]);
-  const [editingEnabled, setEditingEnabled] = useState<boolean>(false);
-  const [showAddModal, setShowAddModal] = useState<boolean>(false);
-  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-  const [currentRow, setCurrentRow] = useState<number>(1);
+const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [originalEmployee, setOriginalEmployee] = useState<Employee | null>(null);
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(employee) !== JSON.stringify(originalEmployee);
+  }, [employee, originalEmployee]);
+  const toast = useToast();
+  const [prevID, setPrevID] = useState<number | null>(null);
+  const [nextID, setNextID] = useState<number | null>(null);
 
-  const [personalFields, setPersonalFields] = useState<Field[]>([
-    { id: 'dob', label: 'Date of Birth', value: 'Not Set' },
-    { id: 'mobile', label: 'Mobile No.', value: 'Not Set' },
-    { id: 'philhealth', label: 'PhilHealth No.', value: 'Not Set' },
-    { id: 'pagibig', label: 'Pag-IBIG No.', value: 'Not Set' },
-    { id: 'emergency', label: 'Emergency No.', value: 'Not Set' },
-    { id: 'bpi', label: 'BPI Account No.', value: 'Not Set' },
-    { id: 'sss', label: 'SSS No.', value: 'Not Set' }
-  ]);
+  
 
-  const [mainFields, setMainFields] = useState<Field[]>([
-    { id: 'position', label: 'Position', value: 'Not Set' },
-    { id: 'department', label: 'Department', value: 'Not Set' },
-    { id: 'status', label: 'Status', value: 'Not Set' },
-    { id: 'begin', label: 'Begin Date', value: 'Not Set' },
-    { id: 'end', label: 'End Date', value: 'Not Set' }
-  ]);
-
-  // Modal form states
-  const [newFieldLabel, setNewFieldLabel] = useState<string>('');
-  const [newFieldValue, setNewFieldValue] = useState<string>('');
-  const [selectedSection, setSelectedSection] = useState<string>('personal');
-  const [deleteSection, setDeleteSection] = useState<string>('personal');
-  const [selectedDeleteLabel, setSelectedDeleteLabel] = useState<string>('');
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Handle profile image upload
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Handle citizenship field addition
-  const addCitizenshipField = () => {
-    const newField: CitizenshipField = {
-      id: Date.now().toString(),
-      value: 'Not Set'
-    };
-    setCitizenshipFields([...citizenshipFields, newField]);
-  };
-
-  // Handle citizenship field update
-  const updateCitizenshipField = (id: string, value: string) => {
-    setCitizenshipFields(fields => 
-      fields.map(field => 
-        field.id === id ? { ...field, value } : field
-      )
-    );
-  };
-
-  // Handle citizenship field removal
-  const removeCitizenshipField = (id: string) => {
-    setCitizenshipFields(fields => fields.filter(field => field.id !== id));
-  };
-
-  // Handle text input validation
-  const validateInput = (value: string, label: string): boolean => {
-    if (label.toLowerCase().includes('no.')) {
-      return /^[0-9]*$/.test(value);
-    } else if (label.toLowerCase().includes('date')) {
-      return /^[0-9\/\-\.\s]*$/.test(value);
-    } else {
-      return /^[a-zA-Z0-9\s]*$/.test(value);
-    }
-  };
-
-  // Handle label validation
-  const validateLabel = (value: string): boolean => {
-    return /^[a-zA-Z0-9\s\.\-]*$/.test(value);
-  };
-
-  // Handle adding new field
-  const handleAddField = () => {
-    if (!newFieldLabel.trim() || !newFieldValue.trim()) {
-      alert('Both label and value are required.');
-      return;
-    }
-
-    const newField: Field = {
-      id: Date.now().toString(),
-      label: newFieldLabel.trim(),
-      value: newFieldValue.trim()
-    };
-
-    if (selectedSection === 'personal') {
-      setPersonalFields([...personalFields, newField]);
-    } else {
-      setMainFields([...mainFields, newField]);
-    }
-
-    setNewFieldLabel('');
-    setNewFieldValue('');
-    setSelectedSection('personal');
-    setShowAddModal(false);
-  };
-
-  // Handle deleting field
-  const handleDeleteField = () => {
-    if (deleteSection === 'personal') {
-      setPersonalFields(fields => fields.filter(field => field.label !== selectedDeleteLabel));
-    } else {
-      setMainFields(fields => fields.filter(field => field.label !== selectedDeleteLabel));
-    }
-    setShowDeleteModal(false);
-  };
-
-  // Get available labels for deletion
-  const getAvailableLabels = (section: string) => {
-    const fields = section === 'personal' ? personalFields : mainFields;
-    return fields.map(field => field.label);
-  };
-
-  // Update delete label options when section changes
   useEffect(() => {
-    const availableLabels = getAvailableLabels(deleteSection);
-    if (availableLabels.length > 0) {
-      setSelectedDeleteLabel(availableLabels[0]);
-    } else {
-      setSelectedDeleteLabel('');
-    }
-  }, [deleteSection, personalFields, mainFields]);
+  fetch(`/api/employees/${id}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setEmployee(data);
+      setOriginalEmployee(data);
+    });
 
-  // Handle field value update
-  const updateFieldValue = (section: string, id: string, value: string) => {
-    if (section === 'personal') {
-      setPersonalFields(fields => 
-        fields.map(field => 
-          field.id === id ? { ...field, value } : field
-        )
-      );
-    } else {
-      setMainFields(fields => 
-        fields.map(field => 
-          field.id === id ? { ...field, value } : field
-        )
-      );
-    }
-  };
+  fetch('/api/employees/ids')
+    .then((res) => res.json())
+    .then((ids: number[]) => {
+      const currentID = Number(id);
+      const sorted = ids.sort((a, b) => a - b);
 
-  // Handle field label update
-  const updateFieldLabel = (section: string, id: string, label: string) => {
-    if (section === 'personal') {
-      setPersonalFields(fields => 
-        fields.map(field => 
-          field.id === id ? { ...field, label } : field
-        )
-      );
-    } else {
-      setMainFields(fields => 
-        fields.map(field => 
-          field.id === id ? { ...field, label } : field
-        )
-      );
-    }
-  };
+      const prev = sorted.filter(eid => eid < currentID).pop() || null;
+      const next = sorted.find(eid => eid > currentID) || null;
 
-  // Arrow button handlers
-  const handleLeftArrow = () => {
-    if (currentRow > 1) {
-      setCurrentRow(currentRow - 1);
-    }
-  };
+      setPrevID(prev);
+      setNextID(next);
+    });
+}, [id]);
 
-  const handleRightArrow = () => {
-    setCurrentRow(currentRow + 1);
-  };
 
-  // Default fields component
-  const DefaultField: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-    <div className={styles.fieldFormat}>
-      <div className={styles.personalInfoFormat}>
-        <span 
-          className={`${styles.infoLabel} ${editingEnabled ? styles.editable : ''}`}
-          contentEditable={editingEnabled}
-          suppressContentEditableWarning={true}
-          onInput={(e) => {
-            const value = e.currentTarget.textContent || '';
-            if (!validateLabel(value)) {
-              e.currentTarget.textContent = value.slice(0, -1);
-            }
-          }}
-        >
-          {label}
-        </span>
-        <div 
-          className={`${styles.infoTextbox} ${editingEnabled ? styles.editable : ''}`}
-          contentEditable={editingEnabled}
-          suppressContentEditableWarning={true}
-          onInput={(e) => {
-            const inputValue = e.currentTarget.textContent || '';
-            if (!validateInput(inputValue, label)) {
-              e.currentTarget.textContent = inputValue.slice(0, -1);
-            }
-          }}
-        >
-          {value}
-        </div>
-      </div>
-      <hr
-        style={{
-          marginTop: '1px',
-          width: '600px',
-          height: '2px',
-          border: 'none',
-          background: 'linear-gradient(to right, transparent, rgba(0, 0, 0, 0.25), transparent)'
-        }}
-      />
-    </div>
-  );
-
-  // Dynamic field component
-  const DynamicField: React.FC<{ field: Field; section: string }> = ({ field, section }) => (
-    <div className={styles.fieldFormat}>
-      <div className={section === 'personal' ? styles.personalInfoFormat : styles.mainInfoFormat}>
-        <span 
-          className={`${styles.infoLabel} ${editingEnabled ? styles.editable : ''}`}
-          contentEditable={editingEnabled}
-          suppressContentEditableWarning={true}
-          onInput={(e) => {
-            const value = e.currentTarget.textContent || '';
-            if (validateLabel(value)) {
-              updateFieldLabel(section, field.id, value);
-            } else {
-              e.currentTarget.textContent = field.label;
-            }
-          }}
-        >
-          {field.label}
-        </span>
-        <div 
-          className={`${styles.infoTextbox} ${editingEnabled ? styles.editable : ''}`}
-          contentEditable={editingEnabled}
-          suppressContentEditableWarning={true}
-          onInput={(e) => {
-            const value = e.currentTarget.textContent || '';
-            if (validateInput(value, field.label)) {
-              updateFieldValue(section, field.id, value);
-            } else {
-              e.currentTarget.textContent = field.value;
-            }
-          }}
-        >
-          {field.value}
-        </div>
-      </div>
-      <hr
-        style={{
-          marginTop: '1px',
-          width: '600px',
-          height: '2px',
-          border: 'none',
-          background: 'linear-gradient(to right, transparent, rgba(0, 0, 0, 0.25), transparent)'
-        }}
-      />
-    </div>
-  );
 
   return (
-    <div className={styles.employeeBoxFormat}>
-      {/* Profile Picture Frame */}
-      <div className={styles.profileFormatBox}>
-        {/* Picture & Name & Email */}
-        <div className={styles.nameImageFrame}>
-          <label htmlFor="profileImageInput" style={{ cursor: 'pointer' }}>
-            <img
-              id="profileImage"
-              className={styles.transparentBackgroundIcon}
-              src={profileImage}
-              alt="Profile"
+    <Box bg="FAF6C7" minH="100vh" w="100vw" p="6">
+      <Flex gap="6" w="100%" align="flex-start">
+        <Box
+          bg="#FFFCD9"
+          borderRadius="md"
+          boxShadow="md"
+          p="5"
+          w="25%"
+          minW="280px"
+        >
+          <Box
+            textAlign="center"
+            fontWeight="bold"
+            fontSize="lg"
+            bg="#4A6100"
+            color="#FFCF50"
+            py="2"
+            borderRadius="md"
+            mb="4"
+          >
+            Personal Information
+          </Box>
+
+          <Text color="#638813" fontWeight="bold" mb="2">
+            Employee Name <b style={{ float: 'right' }}>{id}</b>
+          </Text>
+
+          <VStack align="stretch" spacing="3">
+            <HStack>
+              <Input
+                  value={employee?.lastName || ''}
+                  onChange={(e) => setEmployee(emp => emp ? { ...emp, lastName: e.target.value } : emp)}
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                />
+              <Input
+                value={employee?.firstName || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, firstName: e.target.value } : emp)}
+                bg="#FFFCD9"
+                border="1px solid #A4B465"
+              />
+            </HStack>
+            <HStack>
+              <Input
+                value={employee?.middleName || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, middleName: e.target.value } : emp)}
+                bg="#FFFCD9"
+                w="70%"
+                border="1px solid #A4B465"
+              />
+              <Text fontSize="sm" color="gray.600" w="30%">
+                (optional)
+              </Text>
+            </HStack>
+
+            <HStack>
+              <Text minW="120px" fontWeight="semibold" color="#638813">Date of Birth</Text>
+              <Input
+                value={employee?.birthdate || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, birthdate: e.target.value } : emp)}
+                placeholder="MM/DD/YY"
+                bg="#FFFCD9"
+                border="1px solid #A4B465"
+                w="60%"
+              />
+            </HStack>
+            <HStack>
+              <Text minW="120px" fontWeight="semibold" color="#638813">Email</Text>
+              <Input
+                value={employee?.email || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, email: e.target.value } : emp)}
+                bg="#FFFCD9"
+                border="1px solid #A4B465"
+                w="60%"
+              />
+            </HStack>
+            <HStack>
+              <Text minW="120px" fontWeight="semibold" color="#638813">Phone Number</Text>
+              <Input
+                value={employee?.contactInfo || ''}
+                onChange={(e) => setEmployee(emp => emp ? { ...emp, contactInfo: e.target.value } : emp)}
+                bg="#FFFCD9"
+                border="1px solid #A4B465"
+                w="60%"
+              />
+            </HStack>
+          </VStack>
+
+          <Box mt="4">
+            <Text color="#638813" fontWeight="bold" mb="1">
+              Remarks:
+            </Text>
+            <Textarea
+              value={employee?.remarks || ''}
+              onChange={(e) =>
+                setEmployee(emp => emp ? { ...emp, remarks: e.target.value } : emp)
+              }
+              bg="#FFFCD9"
+              border="1px solid #A4B465"
+              h="230px"
             />
-          </label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            id="profileImageInput"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handleImageUpload}
-          />
-          <span className={styles.fullName}>Dave Smith</span>
-          <span className={styles.email}>davesmith@gmail.com</span>
-        </div>
+          </Box>
 
-        {/* ID Title & Number */}
-        <div className={styles.idFrame}>
-          <span className={styles.idTitle}>ID</span>
-          <span className={styles.idNumber}>12124680</span>
-        </div>
+          <HStack mt="6" justify="space-between" w="100%">
+            <Button
+              size="sm"
+              bg="#4A6100"
+              color="#FFCF50"
+              _hover={{ bg: '#3A4E00' }}
+              onClick={() => window.location.href = `/employeeprofile/${prevID}`}
+              visibility={prevID ? 'visible' : 'hidden'}
+            >
+              Prev Employee
+            </Button>
 
-        {/* Notes Title & Icon & Textbox */}
-        <div className={styles.notesFrame}>
-          <div className={styles.iconTitleBox}>
-            <img
-              src="/notes-icon.svg"
-              alt="Notes-Icon"
-              width="24"
-              height="24"
-            />
-            <span className={styles.notesTitle}>Notes</span>
-          </div>
-          <hr
-            style={{
-              marginTop: '4px',
-              marginBottom: '8px',
-              width: '150px',
-              height: '2px',
-              border: 'none',
-              background: 'linear-gradient(to right, transparent, rgba(0, 0, 0, 0.25), transparent)'
-            }}
-          />
-          <textarea className={styles.notesTextArea}></textarea>
-        </div>
+            <Button
+              size="sm"
+              bg="#4A6100"
+              color="#FFCF50"
+              _hover={{ bg: '#3A4E00' }}
+              onClick={() => window.location.href = `/employeeprofile/${nextID}`}
+              visibility={nextID ? 'visible' : 'hidden'}
+            >
+              Next Employee
+            </Button>
+          </HStack>
+        </Box>
 
-        {/* Row Title & Number & Arrows */}
-        <div className={styles.currentRowFrame}>
-          <button className={styles.arrowLeftButton} onClick={handleLeftArrow}>
-            <img
-              src="/arrow-icon.svg"
-              alt="Arrow-Icon"
-              width="24"
-              height="24"
-            />
-          </button>
-          <span className={styles.currentRowTitle}>Current Row</span>
-          <span className={styles.rowNumber}>{currentRow}</span>
-          <button className={styles.arrowRightButton} onClick={handleRightArrow}>
-            <img
-              src="/arrow-icon.svg"
-              alt="Arrow-Icon"
-              width="24"
-              height="24"
-            />
-          </button>
-        </div>
-      </div>
+        <Box
+          bg="#FFFCD9"
+          borderRadius="md"
+          boxShadow="md"
+          w="100%"
+          flex="1"
+          minH="710px"
+          display="flex"
+          flexDirection="column"
+        >
 
-      {/* Profile Information Frame */}
-      <div className={styles.backgroundFrameBox}>
-        {/* Background Title & Buttons */}
-        <div className={styles.backgroundHeader}>
-          <span className={styles.employeeTitle}>Employee Details</span>
-          <div className={styles.buttonHeaderFrame}>
-            <div className={styles.addButtonFormat}>
-              <img
-                src="/add-icon.svg"
-                alt="Add-Icon"
-                width="24"
-                height="24"
-              />
-              <button className={styles.addInfoButton} onClick={() => setShowAddModal(true)}>
-                Add Info
-              </button>
-            </div>
-            <div className={styles.editButtonFormat}>
-              <img
-                src="/edit-icon.svg"
-                alt="Edit-Icon"
-                width="24"
-                height="24"
-              />
-              <button className={styles.editInfoButton} onClick={() => setEditingEnabled(!editingEnabled)}>
-                Edit Info
-              </button>
-            </div>
-            <div className={styles.deleteButtonFormat}>
-              <img
-                src="/delete-icon.svg"
-                alt="Delete-Icon"
-                width="24"
-                height="24"
-              />
-              <button className={styles.deleteInfoButton} onClick={() => setShowDeleteModal(true)}>
-                Delete Info
-              </button>
-            </div>
-          </div>
-        </div>
+          <HStack spacing="0">
+            <Box
+              w="50%"
+              py="3"
+              textAlign="center"
+              fontWeight="bold"
+              fontSize="xl"
+              bg="#FFFCD9"
+              color="#4A6100"
+              borderTop="1px solid black"
+              borderLeft="1px solid black"
+              borderRight="1px solid black"
+              borderBottom="1px solid black"
+              borderTopLeftRadius="md"
+            >
+              Employment Details
+            </Box>
+            <Box
+              w="50%"
+              py="3"
+              textAlign="center"
+              fontWeight="bold"
+              fontSize="xl"
+              bg="#4A6100"
+              color="#FFCF50"
+              _hover={{ bg: '#3A4E00', cursor: 'pointer' }}
+              onClick={() => {}}
+              borderTopRightRadius="md"
+            >
+              Attendance Details
+            </Box>
+          </HStack>
 
-        {/* Information Body */}
-        <div className={styles.informationBody}>
-          {/* Personal Information Frame */}
-          <div className={styles.personalInformationBox}>
-            {/* Personal Header */}
-            <div className={styles.personalInformationHeader}>
-              <span className={styles.personalInformationTitle}>Personal Information</span>
-              <hr
-                style={{
-                  paddingTop: '5px',
-                  width: '550px',
-                  height: '2px',
-                  border: 'none',
-                  background: 'linear-gradient(to right, transparent, rgba(0, 0, 0, 0.25), transparent)'
-                }}
-              />
-            </div>
-
-            {/* Personal Body */}
-            <div className={styles.personalInformationFrame}>
-              <div className={styles.infoTextboxContainer}>
-                
-              </div>
-              {personalFields.map((field, index) => (
-              <React.Fragment key={field.id}>
-                <DynamicField field={field} section="personal" />
-                
-                {field.label === 'Date of Birth' && (
-                  <div className={styles.fieldFormat} id="citizenship-field">
-                    <div className={styles.personalInfoFormat}>
-                      <div className={styles.citizenshipLabel}>
-                        <span className={styles.infoLabel}>Citizenship</span>
-                        <button className={styles.citizenshipButton} onClick={addCitizenshipField}>
-                          <img
-                            src="/add-icon.svg"
-                            alt="Add-Icon"
-                            width="24"
-                            height="24"
-                          />
-                        </button>
-                      </div>
-                      <div className={styles.infoTextbox}>Not Set</div>
-                    </div>
-
-                    {citizenshipFields.length > 0 && (
-                      <div className={styles.infoTextboxContainer}>
-                        {citizenshipFields.map((field) => (
-                          <div
-                            key={field.id}
-                            className={styles.infoTextbox}
-                            contentEditable={true}
-                            suppressContentEditableWarning={true}
-                            style={{ marginTop: '5px' }}
-                            onInput={(e) => {
-                              const value = e.currentTarget.textContent || '';
-                              if (/^[a-zA-Z\s]*$/.test(value)) {
-                                updateCitizenshipField(field.id, value);
-                              } else {
-                                e.currentTarget.textContent = field.value;
-                              }
-                            }}
-                            onBlur={(e) => {
-                              const value = e.currentTarget.textContent?.trim() || '';
-                              if (!value || value.toLowerCase() === 'not set') {
-                                removeCitizenshipField(field.id);
-                              }
-                            }}
-                          >
-                            {field.value}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <hr
-                      className={styles.citizenshipHR}
-                      style={{
-                        marginTop: '1px',
-                        width: '600px',
-                        height: '2px',
-                        border: 'none',
-                        background: 'linear-gradient(to right, transparent, rgba(0, 0, 0, 0.25), transparent)'
-                      }}
-                    />
-                  </div>
-                )}
-              </React.Fragment>
-            ))}
-            </div>
-          </div>
-
-          {/* Main Information Frame */}
-          <div className={styles.mainInformationBox}>
-            {/* Main Header */}
-            <div className={styles.mainInformationHeader}>
-              <span className={styles.mainInformationTitle}>Main Information</span>
-              <hr
-                style={{
-                  paddingTop: '5px',
-                  width: '550px',
-                  height: '2px',
-                  border: 'none',
-                  background: 'linear-gradient(to right, transparent, rgba(0, 0, 0, 0.25), transparent)'
-                }}
-              />
-            </div>
-
-            {/* Main Body */}
-            <div className={styles.mainInformationFrame}>
-              {mainFields.map((field) => (
-                <DynamicField key={field.id} field={field} section="main" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Add Info Modal */}
-      {showAddModal && (
-        <div className={styles.modalFrame}>
-          <div className={styles.modalContent}>
-            <h2 className={styles.modalHeader}>Additional Information</h2>
-            <hr
-              style={{
-                marginTop: '1px',
-                width: '350px',
-                height: '2px',
-                border: 'none',
-                background: 'linear-gradient(to right, transparent, rgba(0, 0, 0, 0.25), transparent)'
-              }}
-            />
-            <div className={styles.modalBody}>
-              <label>Label:</label>
-              <input
-                type="text"
-                className={styles.modalInput}
-                placeholder="Enter label"
-                value={newFieldLabel}
-                onChange={(e) => setNewFieldLabel(e.target.value)}
-              />
-
-              <label>Value:</label>
-              <input
-                type="text"
-                className={styles.modalInput}
-                placeholder="Enter value"
-                value={newFieldValue}
-                onChange={(e) => setNewFieldValue(e.target.value)}
-              />
-
-              <label>Section:</label>
-              <select 
-                className={styles.dropdownFormat}
-                value={selectedSection}
-                onChange={(e) => setSelectedSection(e.target.value)}
+          <Box p="6" position="relative" flex="1" display="flex" flexDirection="column">
+            {hasChanges && (
+              <Text
+                position="absolute"
+                top="1.5rem"
+                right="1.5rem"
+                color="#7E8854"
+                fontSize="md"
+                fontWeight="semibold"
               >
-                <option value="personal">Personal Information</option>
-                <option value="main">Main Information</option>
-              </select>
-            </div>
+                You have made changes to some fields
+              </Text>
+            )}
 
-            <div className={styles.modalFooter}>
-              <button 
-                className={`${styles.modalButton} ${styles.cancel}`}
-                onClick={() => setShowAddModal(false)}
-              >
-                Cancel
-              </button>
-              <button 
-                className={`${styles.modalButton} ${styles.save}`}
-                onClick={handleAddField}
+            <VStack align="stretch" spacing="4" mt="8">
+              <HStack>
+                <Text minW="150px" fontWeight="semibold" color="#638813">
+                  Basic Salary
+                </Text>
+                <Input
+                  value={employee?.basicSalary || ''}
+                  onChange={(e) => setEmployee(emp => emp ? { ...emp, basicSalary: Number(e.target.value) } : emp)}
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                  w="30%"
+                />
+              </HStack>
+              <HStack>
+                <Text minW="150px" fontWeight="semibold" color="#638813">
+                  Total Salary
+                </Text>
+                <Input
+                  value={employee?.totalSalary || ''}
+                  onChange={(e) => setEmployee(emp => emp ? { ...emp, totalSalary: Number(e.target.value) } : emp)}
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                  w="30%"
+                />
+              </HStack>
+              <HStack>
+                <Text minW="150px" fontWeight="semibold" color="#638813">
+                  Department
+                </Text>
+                <Input
+                  value={employee?.department || ''}
+                  onChange={(e) => setEmployee(emp => emp ? { ...emp, department: e.target.value } : emp)}
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                  w="30%"
+                />
+              </HStack>
+              <HStack>
+                <Text minW="150px" fontWeight="semibold" color="#638813">
+                  Number of PTO’s
+                </Text>
+                <Input
+                  value={employee?.numberOfPTOs ?? 0}
+                  onChange={(e) =>
+                    setEmployee(emp => emp ? { ...emp, numberOfPTOs: Number(e.target.value) } : emp)
+                  }
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                  w="30%"
+                />
+              </HStack>
+            </VStack>
+
+            <HStack justify="flex-end" mt="auto">
+              <Button
+                bg="#4A6100"
+                color="white"
+                _hover={{ bg: '#3A4E00' }}
+                onClick={() => {
+                  if (!employee) return;
+                  
+                  fetch('/api/employees/update', {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      employeeIDs: [employee.employeeID],
+                      updates: employee,
+                    }),
+                  })
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.success) {
+                        toast({
+                        title: 'Saved!',
+                        description: 'Employee profile updated successfully.',
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true,
+                        position: 'top',
+                      });
+                      setOriginalEmployee({ ...employee });
+                      } else {
+                        toast({
+                        title: 'Error!',
+                        description: 'Employee profile has not been updated successfully.',
+                        status: 'error',
+                        duration: 3000,
+                        isClosable: true,
+                        position: 'top',
+                      });
+                      }
+                    })
+                    .catch(err => {
+                      console.error('Network error:', err);
+                    });
+                }}
               >
                 Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Info Modal */}
-      {showDeleteModal && (
-        <div className={styles.modalFrame}>
-          <div className={styles.modalContent}>
-            <h2 className={styles.modalHeader}>Delete Information</h2>
-            <div className={styles.modalBody}>
-              <label>Section:</label>
-              <select 
-                className={styles.dropdownFormat}
-                value={deleteSection}
-                onChange={(e) => setDeleteSection(e.target.value)}
-              >
-                <option value="personal">Personal Information</option>
-                <option value="main">Main Information</option>
-              </select>
-
-              <label>Label to Delete:</label>
-              <select 
-                className={styles.dropdownFormat}
-                value={selectedDeleteLabel}
-                onChange={(e) => setSelectedDeleteLabel(e.target.value)}
-              >
-                {getAvailableLabels(deleteSection).length > 0 ? (
-                  getAvailableLabels(deleteSection).map((label) => (
-                    <option key={label} value={label}>{label}</option>
-                  ))
-                ) : (
-                  <option disabled>No deletable fields available</option>
-                )}
-              </select>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button 
-                className={`${styles.modalButton} ${styles.cancel}`}
-                onClick={() => setShowDeleteModal(false)}
+              </Button>
+              <Button
+                bg="white"
+                color="#4A6100"
+                border="1px solid #4A6100"
+                _hover={{ bg: '#F6F4CF' }}
+                onClick={() => {
+                  if (originalEmployee) {
+                    setEmployee({ ...originalEmployee });
+                    toast({
+                        title: 'Cancelled changes',
+                        description: 'Employee fields has been reset.',
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true,
+                        position: 'top',
+                      });
+                  }
+                }}
               >
                 Cancel
-              </button>
-              <button 
-                className={`${styles.modalButton} ${styles.save}`}
-                onClick={handleDeleteField}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              </Button>
+            </HStack>
+          </Box>
+        </Box>
+      </Flex>
+    </Box>
   );
 };
 
-export default EmployeeProfile;
+export default EmployeeProfileView;

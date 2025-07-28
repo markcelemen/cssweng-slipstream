@@ -12,6 +12,9 @@ export interface IEmployee extends Document {
   email: string;
   totalSalary: number;
   basicSalary: number;
+  birthdate?: string;
+  numberOfPTOs?: number;
+  remarks?: string;
 }
 
 const EmployeeSchema: Schema<IEmployee> = new Schema({
@@ -61,6 +64,18 @@ const EmployeeSchema: Schema<IEmployee> = new Schema({
   basicSalary: {
     type: Number,
     required: true
+  },
+    birthdate: {
+    type: String,
+    default: ''
+  },
+  numberOfPTOs: {
+    type: Number,
+    default: 0
+  },
+  remarks: {
+  type: String,
+  default: '',
   }
 });
 
