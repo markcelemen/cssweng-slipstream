@@ -179,4 +179,5 @@ export const useTablePaginationInput = (currentPage: number, totalPages: number,
     handlePageInputBlur,
     handlePageInputKeyDown,
   };
+  
 };

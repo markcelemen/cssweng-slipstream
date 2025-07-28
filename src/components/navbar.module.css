@@ -416,6 +416,7 @@ transition: transform 0.3s ease;
   display: flex;
   flex: 1;
   flex-grow: 1;
+  gap: 2rem;
   padding: 5px;
   position: relative;
   left:20px;
@@ -443,7 +444,7 @@ transition: transform 0.3s ease;
   margin-top: -1.00px;
   position: relative;
   text-align: center;
-  width: 103px;
+  width: fit-content;;
 }
 
 .textWrapper3 {
@@ -457,7 +458,7 @@ transition: transform 0.3s ease;
   margin-top: -1.00px;
   position: relative;
   text-align: center;
-  width: 111px;
+  width: fit-content;
 }
 
 .textWrapper4 {
@@ -471,7 +472,7 @@ transition: transform 0.3s ease;
   margin-top: -1.00px;
   position: relative;
   text-align: center;
-  width: 174px;
+  width: fit-content;
 }
 
 .textWrapper5 {
@@ -485,7 +486,7 @@ transition: transform 0.3s ease;
   margin-top: -1.00px;
   position: relative;
   text-align: center;
-  width: 147px;
+  width: fit-content;
 }
 
 .textWrapper6 {
@@ -499,7 +500,7 @@ transition: transform 0.3s ease;
   margin-top: -1.00px;
   position: relative;
   text-align: center;
-  width: 110px;
+  width: fit-content;
 }
 
 .dateTime {
