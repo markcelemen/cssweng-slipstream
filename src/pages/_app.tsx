@@ -1,4 +1,5 @@
-import "@/styles/employee-attendance.css";
+import "@/styles/employeeattendance.css";
+import "@/styles/merge.css";
 import "@fontsource/inter";
 import "@/styles/globals.css";
 

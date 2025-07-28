@@ -271,11 +271,11 @@ const Navbar = (): JSX.Element => {
               className={`
                 ${styles.navButton}
                 ${styles.textWrapper3}
-                ${router.pathname === "/edit-history" ? styles.active : ""}
+                ${router.pathname === "/merging" ? styles.active : ""}
               `}
-              onClick={() => router.push("/edit-history")}
+              onClick={() => router.push("/merging")}
             >
-              Edit History
+              Merge Attendace Data
             </button>
           </div>
           <div className={styles.frame}>
