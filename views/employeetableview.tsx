@@ -21,6 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon, EditIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import React, { useRef, useState, useEffect } from "react";
+import { useToast } from "@chakra-ui/react";
 
 // Employee type
 type Employee = {
@@ -61,6 +62,7 @@ const EmployeeTable = () => {
   const tableBoxRef = useRef<HTMLDivElement>(null);
   const shiftAnchorRef = useRef<number | null>(null);
   const outerWrapperRef = useRef<HTMLDivElement>(null); // NEW
+  const toast = useToast();
 
   // Modal
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -220,6 +222,85 @@ const EmployeeTable = () => {
 
   // Add employee handler
   const handleAddEmployee = async () => {
+    
+    const requiredFields: { key: keyof Employee; label: string }[] = [
+      { key: "firstName", label: "First Name" },
+      { key: "lastName", label: "Last Name" },
+      { key: "department", label: "Department" },
+      { key: "position", label: "Position" },
+      { key: "contactInfo", label: "Contact Number" },
+      { key: "email", label: "Email" },
+    ];
+
+    for (const field of requiredFields) {
+      const value = newEmployee[field.key];
+      if (typeof value === "string" && value.trim() === "") {
+        toast({
+          title: "Missing Required Field",
+          description: `${field.label} is required.`,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+        return;
+      }
+    }
+    
+    if (!/^\d+$/.test(newEmployee.contactInfo)) {
+      toast({
+        title: "Invalid Contact Number",
+        description: "Contact number must contain only digits.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmployee.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (newEmployee.totalSalary < 0 || newEmployee.basicSalary < 0) {
+      toast({
+        title: "Negative Salary",
+        description: "Total or Basic salary cannot be negative.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (newEmployee.employeeID <= 0) {
+      toast({
+        title: "Invalid Employee ID",
+        description: "Employee ID must be a positive number.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (employees.some((e) => e.employeeID === newEmployee.employeeID)) {
+      toast({
+        title: "Duplicate Employee ID",
+        description: "An employee with this ID already exists.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       const response = await fetch("/api/employees/add", {
         method: "POST",
