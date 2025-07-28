@@ -359,7 +359,7 @@ return (
             })}
           </Tbody>
         </Table>
-        {/* Custom context menu remains exactly the same */}
+        
         {contextMenu && (
           <Box
             id="custom-context-menu"
@@ -487,7 +487,7 @@ return (
         onClick={() => handleGoToPage(currentPageClamped + 1)}
       />
     </Flex>
-    {/* Add Employee Modal remains exactly the same */}
+    {/*Add Employee Modal*/}
     <Modal isOpen={isOpen} onClose={() => {
       setIsEditing(false);
       onClose();
