@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import EmployeeProfileView from '../../../views/employeeprofileview';
+import { requireAuth } from "@/utils/authGuard";
 
 const EmployeeProfilePage = () => {
   const router = useRouter();
@@ -9,5 +10,9 @@ const EmployeeProfilePage = () => {
 
   return <EmployeeProfileView id={id} />;
 };
+
+export const getServerSideProps = requireAuth(async () => {
+  return { props: {} };
+});
 
 export default EmployeeProfilePage;

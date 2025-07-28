@@ -29,7 +29,7 @@ type Employee = {
   firstName: string;
   middleName: string;
   department: string;
-  coordinator: string;
+  coordinator: boolean;
   position: string;
   contactInfo: string;
   email: string;
@@ -70,7 +70,7 @@ const EmployeeTable = () => {
     firstName: "",
     middleName: "",
     department: "",
-    coordinator: "",
+    coordinator: false,
     position: "",
     contactInfo: "",
     email: "",
@@ -240,7 +240,7 @@ const EmployeeTable = () => {
         firstName: "",
         middleName: "",
         department: "",
-        coordinator: "",
+        coordinator: false,
         position: "",
         contactInfo: "",
         email: "",
@@ -267,19 +267,25 @@ const EmployeeTable = () => {
       .map((idx) => employees[idx]?.employeeID)
       .filter((id): id is number => id !== undefined);
 
-    const updates: Partial<Employee> = {};
-    Object.entries(newEmployee).forEach(([key, value]) => {
-      if (key === "employeeID") return;
-      if (value !== "" && value !== 0) {
-        // @ts-ignore
-        updates[key] = value;
-      }
-    });
+  const updates: Partial<Employee> = {};
 
-    if (Object.keys(updates).length === 0) {
-      alert("No fields changed.");
-      return;
+  Object.entries(newEmployee).forEach(([key, value]) => {
+    if (key === "employeeID") return;
+    if (
+      typeof value === "boolean" ||
+      (typeof value === "number" && value !== 0) ||
+      (typeof value === "string" && (key === "middleName" || value.trim() !== ""))
+      ) {
+      // @ts-ignore
+      updates[key] = value;
     }
+  });
+
+  if (Object.keys(updates).length === 0) {
+    alert("No fields changed.");
+    return;
+  }
+
 
     try {
       const res = await fetch("/api/employees/update", {
@@ -428,29 +434,7 @@ const EmployeeTable = () => {
                   "Contact Number",
                   "Employee ID",
                   <>
-                    Email
-                    <Button
-                      ml={3}
-                      px={2}
-                      py={0}
-                      h="21px"
-                      minW="unset"
-                      bg="#FFD566"
-                      color="#626F47"
-                      fontWeight="semibold"
-                      borderRadius="5px"
-                      fontSize="sm"
-                      boxShadow="sm"
-                      lineHeight="1"
-                      transition="background 0.4s"
-                      _hover={{
-                        bg: "#e6be46",
-                        color: "#4b5831"
-                      }}
-                      onClick={() => alert("Payslips sent to email!")}
-                    >
-                      Send Payslips to Email
-                    </Button>
+                    Email 
                   </>
                 ].map((header, idx) => (
                   <Th key={idx} textAlign="center" verticalAlign="middle" p={2}>
@@ -480,7 +464,7 @@ const EmployeeTable = () => {
                     <Td textAlign="center">{emp.firstName}</Td>
                     <Td textAlign="center">{emp.middleName}</Td>
                     <Td textAlign="center">{emp.department}</Td>
-                    <Td textAlign="center">{emp.coordinator}</Td>
+                    <Td textAlign="center">{emp.coordinator === true ? "Yes" : "No"}</Td>
                     <Td textAlign="center">{emp.position}</Td>
                     <Td textAlign="center">{emp.totalSalary}</Td>
                     <Td textAlign="center">{emp.basicSalary}</Td>
@@ -518,7 +502,7 @@ const EmployeeTable = () => {
                   firstName: "",
                   middleName: "",
                   department: "",
-                  coordinator: "",
+                  coordinator: false,
                   position: "",
                   contactInfo: "",
                   email: "",
@@ -635,28 +619,47 @@ const EmployeeTable = () => {
           <ModalHeader>Add Employee</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {Object.entries(newEmployee).map(([field, value]) => (
-              <Box key={field} mb={2}>
-                <Input
-                  size="sm"
-                  placeholder={field}
-                  value={value}
+            {/* Render all fields except coordinator */}
+            {Object.entries(newEmployee).map(([field, value]) =>
+              field === "coordinator" ? null : (
+                <Box key={field} mb={2}>
+                  <Input
+                    size="sm"
+                    placeholder={field}
+                    value={typeof value === "boolean" ? String(value) : value}
+                    onChange={(e) =>
+                      setNewEmployee((emp) => ({
+                        ...emp,
+                        [field]: ["employeeID", "totalSalary", "basicSalary"].includes(field)
+                          ? Number(e.target.value)
+                          : e.target.value,
+                      }))
+                    }
+                    type={
+                      ["employeeID", "totalSalary", "basicSalary"].includes(field)
+                        ? "number"
+                        : "text"
+                    }
+                  />
+                </Box>
+              )
+            )}
+
+            <Box mb={2}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input
+                  type="checkbox"
+                  checked={!!newEmployee.coordinator}
                   onChange={(e) =>
                     setNewEmployee((emp) => ({
                       ...emp,
-                      [field]: ["employeeID", "totalSalary", "basicSalary"].includes(field)
-                        ? Number(e.target.value)
-                        : e.target.value,
+                      coordinator: e.target.checked,
                     }))
                   }
-                  type={
-                    ["employeeID", "totalSalary", "basicSalary"].includes(field)
-                      ? "number"
-                      : "text"
-                  }
                 />
-              </Box>
-            ))}
+                Coordinator
+              </label>
+            </Box>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={isEditing ? handleUpdateEmployee : handleAddEmployee}>
