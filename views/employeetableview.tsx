@@ -768,7 +768,7 @@ const EmployeeTable = () => {
           <ModalBody>
             {/* Render all fields except coordinator */}
             {Object.entries(newEmployee).map(([field, value]) =>
-              field === "coordinator" ? null : (
+              field === "coordinator" || (isEditing && field === "employeeID") ? null : (
                 <Box key={field} mb={2}>
                   <Input
                     size="sm"
