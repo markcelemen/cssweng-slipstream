@@ -18,6 +18,7 @@ import {
   ModalFooter,
   ModalCloseButton,
   useDisclosure,
+  HStack,
 } from "@chakra-ui/react";
 import { AddIcon, EditIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import React, { useRef, useState, useEffect } from "react";
@@ -67,7 +68,7 @@ const EmployeeTable = () => {
   // Modal
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [newEmployee, setNewEmployee] = useState<Employee>({
-    employeeID: 80000000,
+    employeeID: 1,
     lastName: "",
     firstName: "",
     middleName: "",
@@ -80,6 +81,18 @@ const EmployeeTable = () => {
     basicSalary: 0,
   });
 
+    const fieldLabels: Record<string, string> = {
+    firstName: "First Name",
+    lastName: "Last Name",
+    middleName: "Middle Name",
+    department: "Department",
+    position: "Position",
+    contactInfo: "Contact Number",
+    email: "Email",
+    employeeID: "Employee ID",
+    totalSalary: "Total Salary",
+    basicSalary: "Basic Salary",
+  };
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(employees.length / ROWS_PER_PAGE));
@@ -641,6 +654,19 @@ const EmployeeTable = () => {
               p={2}
               minW="140px"
             >
+              <Button
+                size="sm"
+                w="100%"
+                mb={1}
+                onClick={() => {
+                  const selectedEmployee = employees[contextMenu.row];
+                  if (selectedEmployee) {
+                    window.location.href = `/employeeprofile/${selectedEmployee.employeeID}`;
+                  }
+                }}
+              >
+                Go To Profile
+              </Button>
               <Button size="sm" w="100%" mb={1} onClick={() => {
                 setIsEditing(true);
                 setNewEmployee({
@@ -762,8 +788,10 @@ const EmployeeTable = () => {
         onClose();
       }}>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Add Employee</ModalHeader>
+        <ModalContent bg="#FFFCD9" borderRadius="md" boxShadow="md" p="5">
+          <ModalHeader color="#4A6100" fontWeight="bold" fontSize="xl">
+            {isEditing ? "Update Employee" : "Add Employee"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {/* Render all fields except coordinator */}
@@ -771,23 +799,25 @@ const EmployeeTable = () => {
               field === "coordinator" || (isEditing && field === "employeeID") ? null : (
                 <Box key={field} mb={2}>
                   <Input
-                    size="sm"
-                    placeholder={field}
-                    value={typeof value === "boolean" ? String(value) : value}
-                    onChange={(e) =>
-                      setNewEmployee((emp) => ({
-                        ...emp,
-                        [field]: ["employeeID", "totalSalary", "basicSalary"].includes(field)
-                          ? Number(e.target.value)
-                          : e.target.value,
-                      }))
-                    }
-                    type={
-                      ["employeeID", "totalSalary", "basicSalary"].includes(field)
-                        ? "number"
-                        : "text"
-                    }
-                  />
+                  size="sm"
+                  placeholder={fieldLabels[field] || field}
+                  value={typeof value === "boolean" ? String(value) : value}
+                  onChange={(e) =>
+                    setNewEmployee((emp) => ({
+                      ...emp,
+                      [field]: ["employeeID", "totalSalary", "basicSalary"].includes(field)
+                        ? Number(e.target.value)
+                        : e.target.value,
+                    }))
+                  }
+                  type={
+                    ["employeeID", "totalSalary", "basicSalary"].includes(field)
+                      ? "number"
+                      : "text"
+                  }
+                  bg="#FFFCD9"
+                  border="1px solid #A4B465"
+                />
                 </Box>
               )
             )}
@@ -809,16 +839,29 @@ const EmployeeTable = () => {
             </Box>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={isEditing ? handleUpdateEmployee : handleAddEmployee}>
+          <HStack spacing={3}>
+            <Button
+              bg="#4A6100"
+              color="white"
+              _hover={{ bg: "#3A4E00" }}
+              onClick={isEditing ? handleUpdateEmployee : handleAddEmployee}
+            >
               {isEditing ? "Update" : "Add"}
             </Button>
-            <Button onClick={() => {
-              setIsEditing(false);
-              onClose();
-            }}>
+            <Button
+              bg="white"
+              color="#4A6100"
+              border="1px solid #4A6100"
+              _hover={{ bg: "#F6F4CF" }}
+              onClick={() => {
+                setIsEditing(false);
+                onClose();
+              }}
+            >
               Cancel
             </Button>
-          </ModalFooter>
+          </HStack>
+        </ModalFooter>
         </ModalContent>
       </Modal>
     </Box>
