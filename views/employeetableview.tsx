@@ -349,6 +349,14 @@ const EmployeeTable = () => {
       const newPage = Math.ceil(updatedList.length / ROWS_PER_PAGE);
       setCurrentPage(newPage);
       onClose();
+      toast({
+      title: "Employee Added",
+      description: "The new employee was added successfully.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+      position: "bottom",
+    });
     } catch (error) {
       console.error("Error adding employee:", error);
       alert("Failed to add employee. Please try again.");
@@ -471,6 +479,14 @@ const EmployeeTable = () => {
       shiftAnchorRef.current = null;
       onClose();
       setIsEditing(false);
+      toast({
+      title: "Employee Updated",
+      description: "The selected employee(s) were updated successfully.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+      position: "bottom",
+    });
     } catch (err) {
       console.error("Update failed:", err);
       alert("Failed to update selected employees.");
