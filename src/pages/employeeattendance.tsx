@@ -25,66 +25,18 @@ const ptoData = [
 
 
 
+
 export const EmployeeAttendance = (): JSX.Element => {
-    const [tooltipIdx, setTooltipIdx] = React.useState(-1);
+  const [tooltipIdx, setTooltipIdx] = React.useState(-1);
   const [activeRemark, setActiveRemark] = React.useState("");
 
   return (
     <div className="outerwrapper">
-      <div className="attendance-overall">
-        <div className="left-side-with">
-          <div className="COMPANY">
-            <div className="text-wrapper">
-              BLOOMINGFIELDS ACADEMY FOUNDATION INC.
-            </div>
-          </div>
-        {// EMPLYEE NAME || ID|| POSITION BELOW
-        }
-        <div className="employee-details">
-            <div className="employee-row">
-                <span className="employee-label">Employee Name:</span>
-                <span className="employee-value">[employee name]</span>
-            </div>
-            <div className="employee-row">
-                <span className="employee-label">ID:</span>
-                <span className="employee-value">[ID]</span>
-            </div>
-            <div className="employee-row">
-                <span className="employee-label">Position:</span>
-                <span className="employee-value">[position]</span>
-            </div>
-        </div>
+      
 
-          <div className="GAP" />
-
-          <div className="bottom-half">
-            <div className="remarks-wrapper">
-                <div className="input-box">
-                    <div className="text-wrapper-2">{activeRemark || "remarks here..."}</div>
-                </div>
-            </div>
-        {
-            //THIS HAS THE PREV AND NEXT EMPLOYEE BUTTONS
-        }
-            <div className="arrows-wrapper">
-              <button className="prev-employee-button">
-                <span className="bxs-up-arrow">
-                  <img className="vector" alt="ArrowLeft" src= "/leftArrow.png"/>
-                </span>
-
-                <span className="text-wrapper-3">Prev Employee</span>
-              </button>
-
-              <button className="next-employee-button">
-                <span className="text-wrapper-3">Next Employee</span>
-
-                <span className="vector-wrapper">
-                  <img className="img" alt="ArrowRight" src="/rightArrow.png" />
-                </span>
-              </button>
-            </div>
-
-            <div className="PTO-s-remaining">
+{
+  /*
+  <div className="PTO-s-remaining">
               <div className="text-wrapper-4">PTO’s Remaining:</div>
 
               <div className="text-wrapper-5">5</div>
@@ -92,10 +44,11 @@ export const EmployeeAttendance = (): JSX.Element => {
           </div>
         </div>
 
+  */
+}
+        
         <div className="RIGHT-SIDE-FIELDS">
-          <div className="timeslip">
-            <div className="text-wrapper-6">Timeslip</div>
-          </div>
+          
 
           <div className="headers">
             <div className="date">
@@ -168,6 +121,12 @@ export const EmployeeAttendance = (): JSX.Element => {
                   <div className="div-wrapper-2">
                     <div className="text-wrapper-8">0.00 PHP</div>
                   </div>
+                  <div className="ptos-remainingwrapper">
+                    <div className="text-wrapper-4">PTO’s Remaining:</div>
+
+                  <div className="text-wrapper-5">5</div>
+                </div>
+                  
                 </div>
               </div>
 
@@ -179,17 +138,21 @@ export const EmployeeAttendance = (): JSX.Element => {
                     <div className="pto-cel pto-index">{idx + 1}</div>
                     <div className="pto-cell pto-date-cell">{pto.date}</div>
                     <div className="pto-cell pto-credit">{pto.credited}</div>
+                    
                     </div>
                 ))}
+                
+                 
                
                 </div>
-
+                  
                 
             </div>
+            
           </div>
         </div>
       </div>
-    </div>
+    
   );
 
 
