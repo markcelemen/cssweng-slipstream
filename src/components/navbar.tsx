@@ -235,8 +235,10 @@ const Navbar = (): JSX.Element => {
 
             <div className={styles.textWrapper}>Logout</div>
           </button>
+{/*
 
-           <button
+
+<button
             className={styles.helpBtn}
             onClick={() => alert("Help is pressed")}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
@@ -249,6 +251,12 @@ const Navbar = (): JSX.Element => {
             height={25}
           />
           </button>
+
+
+
+
+*/ }
+           
         </div>
       </div>
 
