@@ -262,6 +262,9 @@ const Navbar = (): JSX.Element => {
 
       <div className={styles.bottom}>
         <div className={styles.navigationItems}>
+          {
+              /*
+          }
           <div className={styles.frame}>
             <button
               className={`
@@ -274,6 +277,9 @@ const Navbar = (): JSX.Element => {
               Deductions
             </button>
           </div>
+          {
+            */
+          }
           <div className={styles.frame}>
             <button
               className={`
