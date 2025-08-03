@@ -128,6 +128,12 @@ const EmployeeTable = () => {
 
  
   const handleAddEmployee = async () => {
+    const duplicate = employees.find(emp => emp.employeeID === newEmployee.employeeID);
+    if (duplicate) {
+      alert("An employee with this ID already exists.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/employees/add", {
         method: "POST",
