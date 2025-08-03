@@ -2,6 +2,9 @@ export interface AttendanceEntry {
     datetime: Date;
     employeeID: number;
     employeeName: string;
+    lastName: string;
+    firstName: string;
+    middleName?: string;
     lateDeduct: number;
     earlyDeduct: number;
     remarks: string;
@@ -33,4 +36,18 @@ export interface EmployeeInfo {
     middleName?: string;
     employeeID: number;
     salary: number;
+}
+
+export interface EmployeeUploadEntry {
+    employeeID: string;
+    lastName: string;
+    firstName: string;
+    middleName?: string;
+    department: string;
+    coordinator: string;
+    position: string;
+    contactInfo: string;
+    email: string;
+    totalSalary: string;
+    basicSalary: string;
 }

@@ -101,11 +101,18 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
             ? employeeInfo.middleName.trim().charAt(0).toUpperCase() + "."
             : "";
         const employeeName = `${employeeInfo?.lastName ?? ""}, ${employeeInfo?.firstName ?? ""}${middleInitial ? " " + middleInitial : ""}`;
+        const lastName = parsedName.lastName;
+        const firstName = parsedName.firstName;
+        const middleName = employeeInfo?.middleName ?? parsedName.middleInitial;
+
 
         return {
             datetime: datetime,
             employeeID: employeeInfo?.employeeID ?? -999,
             employeeName: employeeName,
+            lastName: lastName,
+            firstName: firstName,
+            middleName: middleName,
             lateDeduct: computeLateDeduct(datetime),
             earlyDeduct: computeEarlyDeduct(datetime, employeeInfo?.salary ?? -999),
             remarks: row.note
@@ -123,7 +130,7 @@ export async function normalizeGForm(data : GFormEntry[]): Promise<AttendanceEnt
  *  - `firstName`: The extracted first name.
  *  - `middleInitial`: The extracted middle initial (uppercase, without period). Empty string if none.
  */
-function parseName(fullName: string): { lastName: string; firstName: string; middleInitial: string } {
+export function parseName(fullName: string): { lastName: string; firstName: string; middleInitial: string } {
     // expected format: "Lastname, Firstname M."
     const [last, rest] = fullName.split(",").map(s => s.trim()); // split into ["Lastname", "Firstname M."]
     const parts = rest.split(" ").map(s => s.trim()).filter(Boolean); // ["Firstname", "M."]

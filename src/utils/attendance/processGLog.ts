@@ -83,13 +83,16 @@ export async function normalizeGLog(data : GLogEntry[]): Promise<AttendanceEntry
         const middleInitial = employeeInfo?.middleName
             ? employeeInfo.middleName.trim().charAt(0).toUpperCase() + "."
             : "";
-        const employeeName = `${employeeInfo?.lastName ?? ""}, ${employeeInfo?.firstName ?? ""}${middleInitial ? " " + middleInitial : ""}`;
+        const employeeName = `${employeeInfo?.lastName ?? "Unknown"}, ${employeeInfo?.firstName ?? ""}${middleInitial ? " " + middleInitial : ""}`;
 
         // maps the results to an AttendanceEntry
         return {
             datetime: datetime,
             employeeID: Number(row.enno),
             employeeName: employeeName,
+            lastName: employeeInfo?.lastName ?? "Unknown",
+            firstName: employeeInfo?.firstName ?? "Unknown",
+            middleName: employeeInfo?.middleName ?? "Unknown",
             lateDeduct: computeLateDeduct(datetime),
             earlyDeduct: computeEarlyDeduct(datetime, employeeInfo?.salary ?? -999),
             remarks: "",
