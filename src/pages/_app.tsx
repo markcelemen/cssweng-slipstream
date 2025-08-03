@@ -1,4 +1,5 @@
-import "@/styles/employee-attendance.css";
+import "@/styles/employeeattendance.css";
+import "@/styles/merge.css";
 import "@fontsource/inter";
 import "@/styles/globals.css";
 
@@ -13,11 +14,12 @@ export default function App({ Component, pageProps }: AppProps) {
   const noNavbarRoutes = ["/login"];
   const isLoginPage = router.pathname === "/login";
   const isEmployeetable = router.pathname === "/employeetable";
+   const isAttendanceLogtable = router.pathname === "/attendancelogtable";
 
   const shouldShowNavbar = !noNavbarRoutes.includes(router.pathname);
   const backgroundColor = isLoginPage ? "#FFCF50" : "#FAF6C7";
   
-  const bgStyle = isEmployeetable
+  const bgStyle = isEmployeetable || isAttendanceLogtable
     ? {
         backgroundColor: "#FAF6C7",
         backgroundImage: "url('/rainbow.png')", 
