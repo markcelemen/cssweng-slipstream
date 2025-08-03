@@ -4,9 +4,9 @@ export interface IEmployee extends Document {
   employeeID: number;
   lastName: string;
   firstName: string;
-  middleName: string;
+  middleName?: string;
   department: string;
-  coordinator: string;
+  coordinator: boolean;
   position: string;
   contactInfo: string;
   email: string;
@@ -31,17 +31,18 @@ const EmployeeSchema: Schema<IEmployee> = new Schema({
     type: String,
     required: true
   },
-  middleName: {
-    type: String,
-    required: true
+  middleName: { 
+    type: String, 
+    required: false, 
+    default: "" 
   },
   department: {
     type: String,
     required: true
   },
-  coordinator: {
-    type: String,
-    required: true
+  coordinator: { 
+    type: Boolean, 
+    required: true 
   },
   position: {
     type: String,
