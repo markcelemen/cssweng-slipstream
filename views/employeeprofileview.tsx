@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 interface Employee {
   employeeID: number;
@@ -40,6 +41,7 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
   const toast = useToast();
   const [prevID, setPrevID] = useState<number | null>(null);
   const [nextID, setNextID] = useState<number | null>(null);
+  const router = useRouter();
 
   
 
@@ -239,7 +241,11 @@ const EmployeeProfileView: React.FC<{ id: string }> = ({ id }) => {
               bg="#4A6100"
               color="#FFCF50"
               _hover={{ bg: '#3A4E00', cursor: 'pointer' }}
-              onClick={() => {}}
+              onClick={() => {
+                if (employee?.employeeID) {
+                  router.push(`/attendancedetails/${employee.employeeID}`);
+                }
+              }}
               borderTopRightRadius="md"
             >
               Attendance Details

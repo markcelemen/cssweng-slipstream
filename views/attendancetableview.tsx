@@ -18,6 +18,7 @@ import {
   ModalFooter,
   ModalCloseButton,
   useDisclosure,
+  HStack,
 } from "@chakra-ui/react";
 import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import React, { useRef, useState, useEffect } from "react";
@@ -34,9 +35,9 @@ type Log = {
   lastName: string;
   firstName: string;
   middleName: string;
-  position: string;
-  contactNo: string;
-  email: string;
+  type: string;
+  source: string;
+  note: string;
 };
 
 const ROWS_PER_PAGE = 20;
@@ -57,9 +58,9 @@ const AttendanceTableView = () => {
     lastName: "",
     firstName: "",
     middleName: "",
-    position: "",
-    contactNo: "",
-    email: "",
+    type: "",
+    source: "",
+    note: "",
   });
 
   //Selection and pagination logic
@@ -101,53 +102,19 @@ const AttendanceTableView = () => {
   //Sample Data
   useEffect(() => {
     const mockLogs: Log[] = Array.from({ length: 30 }, (_, i) => ({
-      id: i + 1,
-      date: `2023-05-${String(Math.floor(i / 10) + 1).padStart(2, '0')}`,
-      time: `${8 + Math.floor(i % 10)}:${String((i * 7) % 60).padStart(2, '0')}`,
-      employeeID: 1000 + i,
-      lastName: `Last${i}`,
-      firstName: `First${i}`,
-      middleName: `Middle${i}`,
-      position: ['Manager', 'Supervisor', 'Staff'][i % 3],
-      contactNo: `09${Math.floor(100000000 + Math.random() * 900000000)}`,
-      email: `user${i}@company.com`,
-    }));
+    id: i + 1,
+    date: `2023-05-${String(Math.floor(i / 10) + 1).padStart(2, '0')}`,
+    time: `${8 + Math.floor(i % 10)}:${String((i * 7) % 60).padStart(2, '0')}`,
+    employeeID: 1000 + i,
+    lastName: `Lastname${i}`,
+    firstName: `Firstname${i}`,
+    middleName: `M${i}`,
+    type: ['Time In', 'Time Out'][i % 2],
+    source: ['Gdoc', 'Biometric'][i % 2],
+    note: `Sample note for entry ${i + 1}`,
+  }));
     setLogs(mockLogs);
   }, []);
-
-  const handleAddLog = () => {
-    alert(`Adding new log:\n${JSON.stringify(newLog, null, 2)}`);
-    const updatedLogs = [...logs, {
-      ...newLog,
-      id: logs.length + 1
-    }];
-    setLogs(updatedLogs);
-    setNewLog({
-      id: 0,
-      date: "",
-      time: "",
-      employeeID: 0,
-      lastName: "",
-      firstName: "",
-      middleName: "",
-      position: "",
-      contactNo: "",
-      email: "",
-    });
-    onClose();
-  };
-
-  const handleUpdateLog = () => {
-    const selectedLogs = selectedRows.map(idx => logs[idx]);
-    alert(`Updating logs:\n${JSON.stringify(selectedLogs, null, 2)}\nWith new values:\n${JSON.stringify(newLog, null, 2)}`);
-    const updatedLogs = logs.map(log => 
-      selectedRows.includes(logs.indexOf(log)) ? { ...log, ...newLog } : log
-    );
-    setLogs(updatedLogs);
-    setSelectedRows([]);
-    onClose();
-    setIsEditing(false);
-  };
 
   //DESELECT CONTEXT MENU WHEN CLICKING OUTSIDE MENU
   useEffect(() => {
@@ -163,29 +130,25 @@ const AttendanceTableView = () => {
     return () => window.removeEventListener("mousedown", handleClick);
   }, [contextMenu]);
 
+  const handleUpdateLog = () => {
+  if (!newLog.note.trim()) {
+    alert("Note cannot be empty.");
+    return;
+  }
+
+  const updatedLogs = logs.map((log, i) =>
+    i === contextMenu?.row ? { ...log, note: newLog.note } : log
+  );
+  setLogs(updatedLogs);
+  setIsEditing(false);
+  onClose();
+  setContextMenu(null);
+};
+
   return (
     <Box minH="100vh" width="100vw" display="flex" flexDirection="column" justifyContent="space-between" ref={outerWrapperRef}>
       <Box className="employee-table-container">
         <Flex align="center" gap="2" mb={2}>
-          <Button
-            leftIcon={<AddIcon boxSize={4} />}
-            size="sm"
-            bg="#FEFAD6"
-            color="#626F47"
-            fontWeight="bold"
-            fontSize="md"
-            borderRadius="xl"
-            boxShadow="2px 2px 2px 0px #00000030"
-            _hover={{
-              bg: "#E6E2B1",
-              color: "#626F47",
-            }}
-            px={6}
-            py={3}
-            onClick={onOpen}
-          >
-            Add Log
-          </Button>
           <Box ref={inputBoxRef} display="inline-block" className="select-rows-label">
             Select rows:{" "}
             <Input
@@ -231,9 +194,9 @@ const AttendanceTableView = () => {
                   "Last Name",
                   "First Name",
                   "Middle Name",
-                  "Position",
-                  "Contact No.",
-                  "Email",
+                  "Type",
+                  "Source",
+                  "Note"
                 ].map((header, idx) => (
                   <Th key={idx} textAlign="center" verticalAlign="middle" p={2}>
                     {header}
@@ -264,9 +227,9 @@ const AttendanceTableView = () => {
                     <Td textAlign="center">{log.lastName}</Td>
                     <Td textAlign="center">{log.firstName}</Td>
                     <Td textAlign="center">{log.middleName}</Td>
-                    <Td textAlign="center">{log.position}</Td>
-                    <Td textAlign="center">{log.contactNo}</Td>
-                    <Td textAlign="center">{log.email}</Td>
+                    <Td textAlign="center">{log.type}</Td>
+                    <Td textAlign="center">{log.source}</Td>
+                    <Td textAlign="center">{log.note}</Td>
                   </Tr>
                 );
               })}
@@ -274,61 +237,35 @@ const AttendanceTableView = () => {
           </Table>
           
           {contextMenu && (
-            <Box
-              id="custom-context-menu"
-              position="fixed"
-              top={contextMenu.y}
-              left={contextMenu.x}
-              zIndex={9999}
-              bg="#FFD566"
-              borderRadius="md"
-              boxShadow="md"
-              p={2}
-              minW="140px"
-            >
-              <Button 
-                size="sm" 
-                w="100%" 
-                mb={1} 
-                onClick={() => {
+          <Box
+            id="custom-context-menu"
+            position="fixed"
+            top={contextMenu.y}
+            left={contextMenu.x}
+            zIndex={9999}
+            bg="#FFD566"
+            borderRadius="md"
+            boxShadow="md"
+            p={2}
+            minW="180px"
+          >
+            <Button
+              size="sm"
+              w="100%"
+              onClick={() => {
+                const selected = logs[contextMenu.row];
+                if (selected) {
+                  setNewLog({ ...selected }); // prefill modal with selected log
                   setIsEditing(true);
-                  setNewLog({
-                    id: 0,
-                    date: "",
-                    time: "",
-                    employeeID: 0,
-                    lastName: "",
-                    firstName: "",
-                    middleName: "",
-                    position: "",
-                    contactNo: "",
-                    email: "",
-                  });
                   onOpen();
-                  setContextMenu(null);
-                }}
-              >
-                Edit Selected ({selectedRows.length})
-              </Button>
-              <Button
-                size="sm"
-                colorScheme="red"
-                w="100%"
-                onClick={() => {
-                  const selectedLogs = selectedRows.map(idx => logs[idx]);
-                  alert(`Deleting logs:\n${JSON.stringify(selectedLogs, null, 2)}`);
-                  const remainingLogs = logs.filter((_, idx) => !selectedRows.includes(idx));
-                  setLogs(remainingLogs);
-                  setSelectedRows([]);
-                  setSelectRangeInputs(["", ""]);
-                  shiftAnchorRef.current = null;
-                  setContextMenu(null);
-                }}
-              >
-                Delete Selected ({selectedRows.length})
-              </Button>
-            </Box>
-          )}
+                }
+                setContextMenu(null);
+              }}
+            >
+              Edit Attendance Note
+            </Button>
+          </Box>
+        )}
         </Box>
       </Box>
       
@@ -391,39 +328,47 @@ const AttendanceTableView = () => {
         onClose();
       }}>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{isEditing ? "Edit Log" : "Add Log"}</ModalHeader>
+        <ModalContent bg="#FFFCD9" borderRadius="md" boxShadow="md" p="5">
+          <ModalHeader color="#4A6100" fontWeight="bold" fontSize="xl">
+            Edit Attendance Note
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {Object.entries(newLog).map(([field, value]) => (
-              <Box key={field} mb={2}>
-                <Input
-                  size="sm"
-                  placeholder={field}
-                  value={value}
-                  onChange={(e) =>
-                    setNewLog((log) => ({
-                      ...log,
-                      [field]: ["id", "employeeID"].includes(field)
-                        ? Number(e.target.value)
-                        : e.target.value,
-                    }))
-                  }
-                  type={["id", "employeeID"].includes(field) ? "number" : "text"}
-                />
-              </Box>
-            ))}
+            <Box mb={2}>
+              <Input
+                size="sm"
+                placeholder="Edit attendance note"
+                value={newLog.note}
+                onChange={(e) =>
+                  setNewLog((log) => ({
+                    ...log,
+                    note: e.target.value,
+                  }))
+                }
+              />
+            </Box>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={isEditing ? handleUpdateLog : handleAddLog}>
-              {isEditing ? "Update" : "Add"}
+            <HStack spacing={3}>
+              <Button bg="#4A6100"
+              color="white"
+              _hover={{ bg: "#3A4E00" }} 
+              onClick={handleUpdateLog}>
+              Update
             </Button>
-            <Button onClick={() => {
+            <Button
+              bg="white"
+              color="#4A6100"
+              border="1px solid #4A6100"
+              _hover={{ bg: "#F6F4CF" }}
+              onClick={() => {
               setIsEditing(false);
               onClose();
-            }}>
-              Cancel
-            </Button>
+              }}
+              >
+                Cancel
+              </Button>
+            </HStack>
           </ModalFooter>
         </ModalContent>
       </Modal>
