@@ -39,7 +39,7 @@ export default async function handler(
             firstName: e.firstName,
             middleName: new RegExp(`^${e.middleInitial}`, "i") // matches middle initial
             }))
-        }).select('employeeID lastName firstName middleName totalSalary');
+        }).select('employeeID lastName firstName middleName totalSalary position contactInfo email');
 
         // maps the results to an EmployeeInfo object
         const result = employees.map((e : any) => ({
