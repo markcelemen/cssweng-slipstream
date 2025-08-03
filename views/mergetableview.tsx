@@ -22,7 +22,7 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import React, { useRef, useState, useEffect} from "react";
 import { AttendanceEntry } from "../src/utils/attendance/attendanceTypes";
-import { parseCSV, detectDBMismatches } from "../src/utils/attendance/processAttendance"; 
+import { parseCSV, detectDBMismatches, parsePayslipCSV } from "../src/utils/attendance/processAttendance"; 
 import { set } from "mongoose";
 import e from "express";
 
@@ -247,12 +247,9 @@ const MergeTableView = () => {
             if (!selectedFile) return;
 
             try {
-                const formData = new FormData();
-                formData.append("file", selectedFile);
-
                 await fetch("/api/employees/payslipAdd", {
                 method: "POST",
-                body: formData,
+                body: JSON.stringify(await parsePayslipCSV(selectedFile)),
                 });
 
                 console.log("Payslip uploaded successfully.");

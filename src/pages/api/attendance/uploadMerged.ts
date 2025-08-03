@@ -29,13 +29,16 @@ export default async function handler(
   try {
     await connectDB();
 
-    // Optional: sanitize/validate here
-
     const formattedEntries = entries.map(entry => ({
       datetime: new Date(entry.datetime),
       employeeID: entry.employeeID,
+        employeeName: entry.employeeName,
+        lastName: entry.lastName,
+        firstName: entry.firstName,
+        middleName: entry.middleName,
+        lateDeduct: entry.lateDeduct,
+        earlyDeduct: entry.earlyDeduct,
       remarks: entry.remarks || "",
-      // Add other fields if your schema includes them
     }));
 
     const result = await AttendanceEntryModel.insertMany(formattedEntries, { ordered: false });
