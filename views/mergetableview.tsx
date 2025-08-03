@@ -247,10 +247,7 @@ const MergeTableView = () => {
             if (!selectedFile) return;
 
             try {
-                await fetch("/api/employees/payslipAdd", {
-                method: "POST",
-                body: JSON.stringify(await parsePayslipCSV(selectedFile)),
-                });
+                uploadPayslips(await parsePayslipCSV(selectedFile));
 
                 console.log("Payslip uploaded successfully.");
             } catch (err) {
@@ -263,23 +260,42 @@ const MergeTableView = () => {
             onClose();
         };
 
-        const uploadPayslipFile = async (file: File) => {
-            try {
-                
-            const formData = new FormData();
-            formData.append("file", file);
+        function transformPayslipRows(rows: any[]): any[] {
+            return rows.map(row => {
+                const [last, firstAndMiddle] = row["Name"].split(",").map(s => s.trim());
+                const [firstName, middleInitial = ""] = firstAndMiddle.split(" ");
+                const middleName = middleInitial.replace(".", "");
 
-            
-            await fetch("/api/employees/payslipAdd", {
+                return {
+                employeeID: Number(row["ID"]),
+                lastName: last,
+                firstName: firstName,
+                middleName: middleName || "",
+
+                department: "", // placeholder
+                coordinator: "", // placeholder
+                position: row["Position"],
+                contactInfo: row["BPI"] || "",
+                email: row["Email"] || "",
+
+                totalSalary: Number(row["Monthly Total Pay"]),
+                basicSalary: Number(row["Basic Pay"]),
+                };
+            });
+        }
+
+        async function uploadPayslips(rows: any[]) {
+            const transformed = transformPayslipRows(rows);
+
+            const res = await fetch("/api/payslip/upload", {
                 method: "POST",
-                body: formData,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(transformed),
             });
 
-            console.log("Payslip uploaded successfully.");
-            } catch (error) {
-            console.error("Error uploading payslip:", error);
-            }
-        };
+            const data = await res.json();
+            return data;
+        }
 
         const handleRemoveFile = () => {
             setFileName(null);
