@@ -289,7 +289,7 @@ const Navbar = (): JSX.Element => {
               `}
               onClick={() => router.push("/merging")}
             >
-              Merge Attendace Data
+              Merge Attendance Data
             </button>
           </div>
           <div className={styles.frame}>
@@ -325,7 +325,7 @@ const Navbar = (): JSX.Element => {
               `}
               onClick={() => router.push("/employeeemailer")}
             >
-              Payslip View
+              Mass Emailer
             </button>
           </div>
         </div>

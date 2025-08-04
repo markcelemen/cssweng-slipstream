@@ -24,37 +24,101 @@ import React, { useRef, useState, useEffect} from "react";
 import { AttendanceEntry } from "../src/utils/attendance/attendanceTypes";
 import { parseCSV, detectDBMismatches, parsePayslipCSV } from "../src/utils/attendance/processAttendance"; 
 import { set } from "mongoose";
-import e from "express";
 
+interface MergedAttendanceEntry {
+  lastName: string;
+  firstName: string;
+  middleInitial?: string;
+  action: string;
+  note: string;
+  datetime: string;
+}
 
 const MergeTableView = () => {
-    const [mergedEntries, setMergedEntries] = useState<AttendanceEntry[]>([]);
-    const [unmatchedGlog, setUnmatchedGlog] = useState<AttendanceEntry[]>([]);
-    const [unmatchedGdoc, setUnmatchedGdoc] = useState<AttendanceEntry[]>([]);
-    const [resetKey, setResetKey] = useState(0);
-    const [currentPage, setCurrentPage] = useState(1);
-    const rowsPerPage = 20;
+    const [gdocData, setGdocData] = useState<any[]>([]);
+    const [glogData, setGlogData] = useState<any[]>([]);
+    const [crossMatchedEntries, setCrossMatchedEntries] = useState<MergedAttendanceEntry[]>([]);
+    const unmatchedGdocCount = gdocData.length - crossMatchedEntries.length;
+    const unmatchedGlogCount = glogData.length - crossMatchedEntries.length;
 
-    const existingData = mergedEntries;
 
-    const totalPages = Math.ceil(mergedEntries.length / rowsPerPage);
-    const paginatedEntries = mergedEntries.slice(
-        (currentPage - 1) * rowsPerPage,
-        currentPage * rowsPerPage
-    );
+
+   const crossReferenceFiles = (gdoc: any[], glog: any[]) => {
+    console.log("📥 GDoc parsed data:", gdoc);
+    console.log("📥 GLog parsed data:", glog);
+
+    const result: MergedAttendanceEntry[] = [];
+
+    const glogMap = new Map<string, any[]>();
+    glog.forEach((entry) => {
+        const rawName = entry["NAME"];
+        const name = rawName?.replace(/^"+|"+$/g, "").toUpperCase().trim(); // removes surrounding quotes
+        if (!name) return;
+        if (!glogMap.has(name)) glogMap.set(name, []);
+        glogMap.get(name)!.push(entry);
+    });
+
+    console.log("🧠 GLog Name Keys:", [...glogMap.keys()]);
+
+    gdoc.forEach((entry, i) => {
+        const fullNameRaw = entry["NAME OF EMPLOYEE"]?.trim() || entry["Name of Employee"]?.trim();
+        const fullName = fullNameRaw?.replace(/^"+|"+$/g, "");
+        if (!fullName) {
+        console.log(`⚠️ GDoc row ${i} is missing a name. Skipping.`);
+        return;
+        }
+
+        const lastName = fullName.split(",")[0]?.toUpperCase();
+        const nameParts = fullName.split(",")[1]?.trim().replace(/^"+|"+$/g, "").split(" ") || [];
+        const firstName = nameParts.slice(0, -1).join(" ").replace(/^"+|"+$/g, "");
+        const middleInitial = nameParts.slice(-1)[0]?.replace(/[".]/g, "") || "";
+
+        const lastNameNormalized = lastName?.replace(/\s+/g, "").toUpperCase();
+
+        console.log(`🔍 Looking for matches for lastName="${lastNameNormalized}" extracted from "${fullName}"`);
+
+        const matches = [...glogMap.entries()].filter(([name]) => {
+        const normalizedName = name.replace(/\s+/g, "").toUpperCase();
+        console.log(`   ↪️ Comparing to GLog name="${normalizedName}"`);
+        return normalizedName === lastNameNormalized;
+        });
+
+        if (matches.length === 0) {
+        console.log(`❌ No match found for "${lastNameNormalized}"`);
+        } else {
+        matches.forEach(([key, glogEntries]) => {
+            console.log(`✅ Match found: "${lastNameNormalized}" matched with GLog key "${key}" → entries:`, glogEntries);
+            glogEntries.forEach((glogEntry) => {
+            const entryToPush = {
+                lastName: lastName || "",
+                firstName: firstName,
+                middleInitial: middleInitial,
+                action: entry["ACTION"] || "",
+                note: entry["NOTE"] || "",
+                datetime: glogEntry["DATETIME"] || entry["TIMESTAMP"] || "",
+            };
+
+            console.log("✅ Entry pushed:", entryToPush);
+            result.push(entryToPush);
+            });
+        });
+        }
+    });
+
+    console.log("✅ Total matched entries:", result.length);
+    setCrossMatchedEntries(result);
+    };
 
     const handleCancel = () => {
-        setMergedEntries([]);
-        setUnmatchedGlog([]);
-        setUnmatchedGdoc([]);
-        setCurrentPage(1);
-        setResetKey(prev => prev + 1);
-    }
+    setCrossMatchedEntries([]);
+    setGdocData([]);
+    setGlogData([]);
+    };
 
     const handleMerge = async () => {
-        if (mergedEntries.length === 0) {
-            alert("No entries to merge.");
-            return;
+        if (crossMatchedEntries.length === 0) {
+        alert("No entries to merge.");
+        return;
         }
         try {
             const response = await fetch("/api/attendance/uploadMerged", {
@@ -62,7 +126,7 @@ const MergeTableView = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(mergedEntries),
+                body: JSON.stringify(crossMatchedEntries),
             });
 
             if (!response.ok) {
@@ -77,304 +141,48 @@ const MergeTableView = () => {
         }
     }
 
-    const FileUploadButton = ({ 
-        label, 
-        expectedColumns, 
-        existingData, 
-        onParsed,
-        resetKey }: { 
-            label: string; 
-            expectedColumns: string; 
-            existingData: AttendanceEntry[]; 
-            onParsed: (merged: AttendanceEntry[]) => void 
-            resetKey: number;
+    const FileUploadButton = ({
+        label,
+        onFileParsed,
+        }: {
+        label: string;
+        onFileParsed: (rows: any[]) => void;
         }) => {
-        const [fileName, setFileName] = useState<string | null>(null);
         const fileInputRef = useRef<HTMLInputElement>(null);
-        const infoBoxRef = useRef<HTMLDivElement>(null);
-        const [isDragging, setIsDragging] = useState(false);
-        const [startX, setStartX] = useState(0);
-        const [scrollLeft, setScrollLeft] = useState(0);
 
-        useEffect(() => {
-            setFileName(null);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
-        }, [resetKey]);
-    
-        const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0];
-            if(file) {
-                setFileName(file.name);
-                parseCSV(file, existingData, (merged) => {
-                    setMergedEntries(merged); 
-                    const { glogMismatches, gdocMismatches } = detectDBMismatches(merged);
-                    setUnmatchedGdoc(gdocMismatches);
-                    setUnmatchedGlog(glogMismatches);
+            if (!file) return;
+
+            const text = await file.text();
+            const rows = parseCSVManually(text);
+            onFileParsed(rows);
+        };
+
+        const parseCSVManually = (text: string) => {
+            const [headerLine, ...lines] = text.split("\n").filter(Boolean);
+            const headers = headerLine.split(",").map((h) => h.trim().toUpperCase());
+
+            return lines.map((line) => {
+                const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(val =>
+                val.replace(/^"+|"+$/g, "").trim()
+                ) || [];
+
+                const entry: any = {};
+                headers.forEach((header, i) => {
+                entry[header] = values[i];
                 });
-            }
-        };
-
-        const handleRemoveFile = () => {
-            setFileName(null);
-            if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-            }
-        };
-
-        //manual scroll handlers
-        const startDrag = (e: React.MouseEvent) => {
-            if (!infoBoxRef.current) return;
-            setIsDragging(true);
-            setStartX(e.pageX - infoBoxRef.current.offsetLeft);
-            setScrollLeft(infoBoxRef.current.scrollLeft);
-        };
-
-        const duringDrag = (e: React.MouseEvent) => {
-            if (!isDragging || !infoBoxRef.current) return;
-            e.preventDefault();
-            const x = e.pageX - infoBoxRef.current.offsetLeft;
-            const walk = (x - startX) * 2; // Scroll multiplier
-            infoBoxRef.current.scrollLeft = scrollLeft - walk;
-        };
-
-        const endDrag = () => {
-            setIsDragging(false);
+                return entry;
+            });
         };
 
         return (
             <div className="FileUploadContainer">
-                <div className="FileUploadRow">
-
-                    
-                    <div className="FileUploadBoxes">
-                        <span className="FileUploadLabel">
-                        {label}
-                        </span>
-
-                        <div 
-
-                            className={`FileInfoBox ${isDragging ? 'grabbing' : ''}`}
-                            ref={infoBoxRef}
-                            onMouseDown={startDrag}
-                            onMouseMove={duringDrag}
-                            onMouseUp={endDrag}
-                            onMouseLeave={endDrag}
-                        
-                        >
-                            {fileName ? fileName : `Expected: ${expectedColumns}`}
-                        </div>
-                        <label className="FileUploadButton">
-                            {fileName ? (
-                            <div className="RemoveFile" onClick={handleRemoveFile}>✕</div>
-                            ) : (
-                            <div className="RemoveFile">Choose File</div>
-                            )}
-                            <input 
-                            ref={fileInputRef}
-                            type="file" 
-                            accept=".csv,.xlsx" 
-                            onChange={handleFileChange}
-                            style={{ display: 'none' }}
-                            />
-                        </label>
-                       
-                    </div>
-                </div>
+            <span>{label}</span>
+            <input type="file" accept=".csv" onChange={handleFileChange} ref={fileInputRef} />
             </div>
         );
-    };
-    const expectedPayslipColumns = {
-        id: "ID",
-        name: "Name",
-        position: "Position",
-        monthlyTotalPay: "Monthly Total Pay",
-        basicPay: "Basic Pay",
-        halfBasicPay: "1/2 Basic Pay",
-        withholdingTax: "Withholding Tax",
-        sssLoan: "SSS Loan",
-        calamityLoan: "Calamity Loan",
-        cashAdvance: "Cash Advance",
-        otherRecurring: "Other Recurring",
-        otherDeduct: "Other Deduct",
-        absenceUndertime: "Absence / Undertime",
-        sss: "SSS",
-        pagibig: "Pag-IBIG",
-        philHealth: "PhilHealth",
-        totalContributions: "Total Contributions",
-        totalDeductions: "Total Deductions",
-        halfCola: "1/2 COLA",
-        otherAddition: "Other Addition",
-        totalIncome: "Total Income",
-        netTotal: "Net Total",
-        incomeForPayslip: "Income for Payslip",
-        netForPayslip: "Net for Payslip",
-        remarks: "Remarks",
-        bpi: "BPI",
-        email: "Email",
-        leavesAccrued: "Leaves Accrued",
-        leavesUsed: "Leaves Used",
-        leavesRemaining: "Leaves Remaining"
-    };
-    
-    const PayslipUploadButton = ({
-        label,
-        expectedColumns,
-        }: {
-        label: string;
-        expectedColumns: typeof expectedPayslipColumns;
-        }) => {
-        const [fileName, setFileName] = useState<string | null>(null);
-        const fileInputRef = useRef<HTMLInputElement>(null);
-        const infoBoxRef = useRef<HTMLDivElement>(null);
-        const [isDragging, setIsDragging] = useState(false);
-        const [startX, setStartX] = useState(0);
-        const [scrollLeft, setScrollLeft] = useState(0);
-        const [selectedFile, setSelectedFile] = useState<File | null>(null);
-        const { isOpen, onOpen, onClose } = useDisclosure();
-
-        const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const file = e.target.files?.[0];
-                if (file) {
-                    setSelectedFile(file);
-                    setFileName(file.name);
-                    onOpen();
-                }
         };
-
-        const confirmUpload = async () => {
-            if (!selectedFile) return;
-
-            try {
-                uploadPayslips(await parsePayslipCSV(selectedFile));
-
-                console.log("Payslip uploaded successfully.");
-            } catch (err) {
-                console.error("Upload failed", err);
-            }
-
-            setSelectedFile(null);
-            setFileName(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-            onClose();
-        };
-
-        function transformPayslipRows(rows: any[]): any[] {
-            return rows.map(row => {
-                const [last, firstAndMiddle] = row["Name"].split(",").map(s => s.trim());
-                const [firstName, middleInitial = ""] = firstAndMiddle.split(" ");
-                const middleName = middleInitial.replace(".", "");
-
-                return {
-                employeeID: Number(row["ID"]),
-                lastName: last,
-                firstName: firstName,
-                middleName: middleName || "",
-
-                department: "", // placeholder
-                coordinator: "", // placeholder
-                position: row["Position"],
-                contactInfo: row["BPI"] || "",
-                email: row["Email"] || "",
-
-                totalSalary: Number(row["Monthly Total Pay"]),
-                basicSalary: Number(row["Basic Pay"]),
-                };
-            });
-        }
-
-        async function uploadPayslips(rows: any[]) {
-            const transformed = transformPayslipRows(rows);
-
-            const res = await fetch("/api/payslip/upload", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(transformed),
-            });
-
-            const data = await res.json();
-            return data;
-        }
-
-        const handleRemoveFile = () => {
-            setFileName(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        };
-
-        // Manual scroll handlers
-        const startDrag = (e: React.MouseEvent) => {
-            if (!infoBoxRef.current) return;
-            setIsDragging(true);
-            setStartX(e.pageX - infoBoxRef.current.offsetLeft);
-            setScrollLeft(infoBoxRef.current.scrollLeft);
-        };
-
-        const duringDrag = (e: React.MouseEvent) => {
-            if (!isDragging || !infoBoxRef.current) return;
-            e.preventDefault();
-            const x = e.pageX - infoBoxRef.current.offsetLeft;
-            const walk = (x - startX) * 2;
-            infoBoxRef.current.scrollLeft = scrollLeft - walk;
-        };
-
-        const endDrag = () => {
-            setIsDragging(false);
-        };
-
-        return (
-            <>
-                <div className="FileUploadContainer">
-                    <div className="FileUploadRow">
-                        <div className="FileUploadBoxes">
-                            <span className="FileUploadLabel">{label}</span>
-
-                            <div
-                                className={`FileInfoBox ${isDragging ? "grabbing" : ""}`}
-                                ref={infoBoxRef}
-                                onMouseDown={startDrag}
-                                onMouseMove={duringDrag}
-                                onMouseUp={endDrag}
-                                onMouseLeave={endDrag}
-                            >
-                                {fileName ? fileName : `Expected: ${expectedColumns}`}
-                            </div>
-
-                            <label className="FileUploadButton">
-                                {fileName ? (
-                                    <div className="RemoveFile" onClick={handleRemoveFile}>✕</div>
-                                ) : (
-                                    <div className="RemoveFile">Choose File</div>
-                                )}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept=".csv,.xlsx"
-                                    onChange={handleFileChange}
-                                    style={{ display: "none" }}
-                                />
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <Modal isOpen={isOpen} onClose={onClose} isCentered>
-                    <ModalOverlay />
-                    <ModalContent>
-                        <ModalHeader>Confirm Payslip Upload</ModalHeader>
-                        <ModalCloseButton />
-                        <ModalBody>
-                            Are you sure you want to upload <strong>{fileName}</strong> as the payslip file?
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button onClick={onClose} mr={3}>Cancel</Button>
-                            <Button colorScheme="green" onClick={confirmUpload}>Upload</Button>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
-            </>
-        );
-    };
-
 
  return (
     <div className="BiggestFormWrapper" >
@@ -391,32 +199,24 @@ const MergeTableView = () => {
         <div className="ImportAreaWrapper">
         
             <div className="GlogWrapper">
-                <FileUploadButton 
-                    label="Glog csv" 
-                    expectedColumns="No, Mchn, EnNo, Name, Mode, IOMd, DateTime" 
-                    existingData={mergedEntries}
-                    onParsed={setMergedEntries}
-                    resetKey={resetKey}
-                />
+                <FileUploadButton
+                    label="Upload GLog"
+                    onFileParsed={(rows) => {
+                        setGlogData(rows);
+                        if (gdocData.length > 0) crossReferenceFiles(gdocData, rows);
+                    }}
+                    />
             </div>
 
             <div className="GdocWrapper">
-                <FileUploadButton 
-                    label="Gdoc csv" 
-                    expectedColumns="Timestamp, Name of Employee, Action, Note" 
-                    existingData={mergedEntries}
-                    onParsed={setMergedEntries}
-                    resetKey={resetKey}
-                />
+                <FileUploadButton
+                    label="Upload GDoc"
+                    onFileParsed={(rows) => {
+                        setGdocData(rows);
+                        if (glogData.length > 0) crossReferenceFiles(rows, glogData);
+                    }}
+                    />
             </div>
-
-            <div className="PayslipWrapper">
-                <PayslipUploadButton 
-                    label="Payslip csv" 
-                    expectedColumns={expectedPayslipColumns}
-                />
-            </div>
-
 
       </div>
     
@@ -430,16 +230,16 @@ const MergeTableView = () => {
                 </div>
                 <div className="insideSummaryBox smalltext">
                     <div>
-                        <span>{unmatchedGlog.length === 0 ? "✓" : "⚠️"}</span>{" "}
-                        {unmatchedGlog.length === 0
-                            ? "All GLog entries matched."
-                            : `${unmatchedGlog.length} unmatched entries from GLog`}
+                        <span>{unmatchedGlogCount === 0 ? "✓" : "⚠️"}</span>{" "}
+                        {unmatchedGlogCount === 0
+                        ? "All GLog entries matched."
+                        : `${unmatchedGlogCount} unmatched entries from GLog`}
                     </div>
                     <div>
-                        {unmatchedGdoc.length === 0 ? "✓" : "⚠️"}{" "}
-                        {unmatchedGdoc.length === 0
-                            ? "All GDoc entries matched."
-                            : `${unmatchedGdoc.length} unmatched entries from GDoc`}
+                        <span>{unmatchedGdocCount === 0 ? "✓" : "⚠️"}</span>{" "}
+                        {unmatchedGdocCount === 0
+                        ? "All GDoc entries matched."
+                        : `${unmatchedGdocCount} unmatched entries from GDoc`}
                     </div>
                 </div>
                 <div className="PrevAndNextButtonWrapper ReverseRowWrapper">
@@ -461,71 +261,33 @@ const MergeTableView = () => {
 
                 </div>
                 <div className="ActualTableWrapper">
-                    {mergedEntries.length > 0 && (
-                        <Box
-                            display="flex"
-                            justifyContent="center"
-                            mx="auto"
-                            mt={6}
-                            overflowX="auto"
-                            overflowY="auto"
-                            maxHeight="100%"
-                            border="1px solid #ccc"
-                            borderRadius="md"
-                            bg="#FBFCE5"
-                            className="FilePreviewWrapper"
-                        >
-                            <Table variant="unstyled" size="sm" className="employee-table-bordered">
-                            <Thead bg="#A4B465" position="sticky" top={0} zIndex={1} h="50px">
-                                <Tr>
-                                {[
-                                    "#",
-                                    "Date",
-                                    "Time",
-                                    "Employee ID",
-                                    "Last Name",
-                                    "First Name",
-                                    "Middle Name",
-                                    "Position",
-                                    "Contact No.",
-                                    "Email",
-                                ].map((header, idx) => (
-                                    <Th key={idx} textAlign="center" p={2}>
-                                    {header}
-                                    </Th>
+                    {crossMatchedEntries.length > 0 && (
+                    <Box mt={4}>
+                        <Table size="sm">
+                        <Thead bg="#A4B465">
+                        <Tr>
+                            <Th>Last Name</Th>
+                            <Th>First Name</Th>
+                            <Th>Middle Initial</Th>
+                            <Th>Action</Th>
+                            <Th>Note</Th>
+                            <Th>DateTime</Th>
+                        </Tr>
+                        </Thead>
+                        <Tbody>
+                            {crossMatchedEntries.map((entry, idx) => (
+                                <Tr key={idx} bg={idx % 2 === 0 ? "rgba(251, 252, 229, 0.93)" : "rgba(230, 226, 177, 0.93)"}>
+                                    <Td>{entry.lastName}</Td>
+                                    <Td>{entry.firstName}</Td>
+                                    <Td>{entry.middleInitial}</Td>
+                                    <Td>{entry.action}</Td>
+                                    <Td>{entry.note}</Td>
+                                    <Td>{entry.datetime}</Td>
+                                </Tr>
                                 ))}
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {paginatedEntries.map((entry, idx) => {
-                                const globalIndex = (currentPage - 1) * rowsPerPage + idx;
-                                return (
-                                    <Tr
-                                        key={globalIndex }
-                                        bg={
-                                            globalIndex % 2 === 0
-                                        ? "rgba(251, 252, 229, 0.93)"
-                                        : "rgba(230, 226, 177, 0.93)"
-                                    }
-                                    style={{ userSelect: "none" }}
-                                >
-                                    <Td textAlign="center">{globalIndex + 1}</Td>
-                                    <Td textAlign="center">{entry.datetime instanceof Date ? entry.datetime.toLocaleString() : entry.datetime}</Td>
-                                    <Td textAlign="center">{entry.datetime instanceof Date ? entry.datetime.toLocaleString() : entry.datetime}</Td>
-                                    <Td textAlign="center">{entry.employeeID}</Td>
-                                    <Td textAlign="center">{entry.employeeName}</Td>
-                                    <Td textAlign="center">{entry.employeeName}</Td>
-                                    <Td textAlign="center">{entry.employeeName}</Td>
-                                    <Td textAlign="center">insert position</Td>
-                                    <Td textAlign="center">insert contact</Td>
-                                    <Td textAlign="center">insert email</Td>
-                                </Tr>
-                                );
-                            })}
-                            </Tbody>
-                            </Table>
-                            
-                        </Box>
+                        </Tbody>
+                        </Table>
+                    </Box>
                     )}
                 </div>
                 <div className="PagnationWrapper"> 
