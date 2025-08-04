@@ -8,138 +8,196 @@ import {
   Td,
   Button,
   Flex,
-  IconButton,
-  Input,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  useDisclosure,
 } from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import React, { useRef, useState, useEffect} from "react";
-import { AttendanceEntry } from "../src/utils/attendance/attendanceTypes";
-import { parseCSV, detectDBMismatches, parsePayslipCSV } from "../src/utils/attendance/processAttendance"; 
-import { set } from "mongoose";
+import React, { useRef, useState} from "react";
 
 interface MergedAttendanceEntry {
+  employeeID: number;
   lastName: string;
   firstName: string;
-  middleInitial?: string;
-  action: string;
-  note: string;
   datetime: string;
+  type: "Check In" | "Check Out" | "Incomplete";
+  source: "GLog" | "GDoc";
+  note?: string;
 }
+
 
 const MergeTableView = () => {
     const [gdocData, setGdocData] = useState<any[]>([]);
     const [glogData, setGlogData] = useState<any[]>([]);
-    const [crossMatchedEntries, setCrossMatchedEntries] = useState<MergedAttendanceEntry[]>([]);
-    const unmatchedGdocCount = gdocData.length - crossMatchedEntries.length;
-    const unmatchedGlogCount = glogData.length - crossMatchedEntries.length;
-
-
-
-   const crossReferenceFiles = (gdoc: any[], glog: any[]) => {
-    console.log("📥 GDoc parsed data:", gdoc);
-    console.log("📥 GLog parsed data:", glog);
-
-    const result: MergedAttendanceEntry[] = [];
-
-    const glogMap = new Map<string, any[]>();
-    glog.forEach((entry) => {
-        const rawName = entry["NAME"];
-        const name = rawName?.replace(/^"+|"+$/g, "").toUpperCase().trim(); // removes surrounding quotes
-        if (!name) return;
-        if (!glogMap.has(name)) glogMap.set(name, []);
-        glogMap.get(name)!.push(entry);
-    });
-
-    console.log("🧠 GLog Name Keys:", [...glogMap.keys()]);
-
-    gdoc.forEach((entry, i) => {
-        const fullNameRaw = entry["NAME OF EMPLOYEE"]?.trim() || entry["Name of Employee"]?.trim();
-        const fullName = fullNameRaw?.replace(/^"+|"+$/g, "");
-        if (!fullName) {
-        console.log(`⚠️ GDoc row ${i} is missing a name. Skipping.`);
-        return;
-        }
-
-        const lastName = fullName.split(",")[0]?.toUpperCase();
-        const nameParts = fullName.split(",")[1]?.trim().replace(/^"+|"+$/g, "").split(" ") || [];
-        const firstName = nameParts.slice(0, -1).join(" ").replace(/^"+|"+$/g, "");
-        const middleInitial = nameParts.slice(-1)[0]?.replace(/[".]/g, "") || "";
-
-        const lastNameNormalized = lastName?.replace(/\s+/g, "").toUpperCase();
-
-        console.log(`🔍 Looking for matches for lastName="${lastNameNormalized}" extracted from "${fullName}"`);
-
-        const matches = [...glogMap.entries()].filter(([name]) => {
-        const normalizedName = name.replace(/\s+/g, "").toUpperCase();
-        console.log(`   ↪️ Comparing to GLog name="${normalizedName}"`);
-        return normalizedName === lastNameNormalized;
-        });
-
-        if (matches.length === 0) {
-        console.log(`❌ No match found for "${lastNameNormalized}"`);
-        } else {
-        matches.forEach(([key, glogEntries]) => {
-            console.log(`✅ Match found: "${lastNameNormalized}" matched with GLog key "${key}" → entries:`, glogEntries);
-            glogEntries.forEach((glogEntry) => {
-            const entryToPush = {
-                lastName: lastName || "",
-                firstName: firstName,
-                middleInitial: middleInitial,
-                action: entry["ACTION"] || "",
-                note: entry["NOTE"] || "",
-                datetime: glogEntry["DATETIME"] || entry["TIMESTAMP"] || "",
-            };
-
-            console.log("✅ Entry pushed:", entryToPush);
-            result.push(entryToPush);
-            });
-        });
-        }
-    });
-
-    console.log("✅ Total matched entries:", result.length);
-    setCrossMatchedEntries(result);
-    };
+    const processedGLogRef = useRef<MergedAttendanceEntry[]>([]);
 
     const handleCancel = () => {
-    setCrossMatchedEntries([]);
     setGdocData([]);
     setGlogData([]);
     };
 
-    const handleMerge = async () => {
-        if (crossMatchedEntries.length === 0) {
-        alert("No entries to merge.");
-        return;
+    const processGLogData = async (rows: any[]): Promise<MergedAttendanceEntry[]> => {
+        const grouped: { [key: string]: any[] } = {};
+
+        rows.forEach((entry) => {
+            const employeeID = parseInt(entry["ENNO"]);
+            const name = entry["NAME"]?.trim() || "";
+            const datetime = new Date(entry["DATETIME"]);
+
+            if (!employeeID || !name || isNaN(datetime.getTime())) return;
+
+            const dateKey = `${employeeID}_${datetime.toDateString()}`;
+            if (!grouped[dateKey]) grouped[dateKey] = [];
+            grouped[dateKey].push({ employeeID, name, datetime });
+        });
+
+        const result: MergedAttendanceEntry[] = [];
+
+        const uniqueIDs = [...new Set(rows.map(r => parseInt(r["ENNO"])))]
+            .filter(id => !isNaN(id));
+
+
+            const employees = await fetch("/api/employees/by-ids", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: uniqueIDs }),
+            })
+            .then(res => res.json())
+            .catch(err => {
+                return [];
+            });
+
+            if (!Array.isArray(employees)) {
+            console.error("Invalid response from /api/employees/by-ids:", employees);
+            }
+
+
+
+
+        const employeeMap = new Map<number, any>();
+
+        if (Array.isArray(employees)) {
+        employees.forEach((emp: any) => {
+            employeeMap.set(emp.employeeID, emp);
+        });
+        } else {
+        console.error("Invalid response from /api/employees/by-ids", employees);
         }
+
+        for (const entries of Object.values(grouped)) {
+            entries.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
+
+            const employeeID = entries[0].employeeID;
+            const fallbackName = entries[0].name.trim();
+            const found = employeeMap.get(employeeID);
+
+            const firstName = found ? found.firstName : "N/A";
+            const lastName = found ? found.lastName : fallbackName;
+
+
+            const pushEntry = (datetime: string, type: "Check In" | "Check Out" | "Incomplete") => {
+            result.push({
+                employeeID,
+                firstName,
+                lastName,
+                datetime,
+                type,
+                source: "GLog",
+                note: "",
+            });
+            };
+
+            if (entries.length === 1) {
+            pushEntry(entries[0].datetime.toISOString(), "Incomplete");
+            } else {
+            pushEntry(entries[0].datetime.toISOString(), "Check In");
+            pushEntry(entries[1].datetime.toISOString(), "Check Out");
+            }
+        }
+
+    return result;
+    };
+
+    const processGDocData = async (rows: any[]): Promise<MergedAttendanceEntry[]> => {
+        const result: MergedAttendanceEntry[] = [];
+
+        const employees = await fetch("/api/employees/all", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        }).then((res) => res.json()).catch(() => []);
+
+        const employeeMapByFullName = new Map<string, any>();
+        employees.forEach((emp: any) => {
+            const fullName = `${emp.lastName}, ${emp.firstName} ${emp.middleName || ""}`
+                .replace(/\s+/g, " ")
+                .replace(/["']/g, "")
+                .replace(/\.+$/, "")
+                .toLowerCase()
+                .trim();
+            employeeMapByFullName.set(fullName.toLowerCase(), emp);
+        });
+
+        for (const row of rows) {
+            const fullNameRaw = row["NAME OF EMPLOYEE"]?.trim() || "";
+            const fullName = fullNameRaw
+            .replace(/\s+/g, " ")
+            .replace(/["']/g, "")
+            .replace(/\.+$/, "")
+            .toLowerCase()
+            .trim();
+            const timestamp = new Date(row["TIMESTAMP"]);
+            const action = row["ACTION"]?.toLowerCase();
+            const note = row["NOTE"] || "";
+
+            if (!timestamp || isNaN(timestamp.getTime()) || !employeeMapByFullName.has(fullName)) {
+            console.warn("Skipping unmatched or invalid row:", row);
+            continue;
+            }
+
+            const emp = employeeMapByFullName.get(fullName);
+            const type = action === "clock in" ? "Check In" : action === "clock out" ? "Check Out" : "Incomplete";
+
+            result.push({
+            employeeID: emp.employeeID,
+            firstName: emp.firstName,
+            lastName: emp.lastName,
+            datetime: timestamp.toISOString(),
+            type,
+            source: "GDoc",
+            note,
+            });
+        }
+
+        return result;
+        };
+
+    const handleUpload = async () => {
+        if (processedGLogRef.current.length === 0) {
+            alert("No entries to upload.");
+            return;
+        }
+
         try {
-            const response = await fetch("/api/attendance/uploadMerged", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(crossMatchedEntries),
+            const isGDoc = processedGLogRef.current[0]?.source === "GDoc";
+            const uploadUrl = isGDoc
+            ? "/api/attendance/uploadGdoc"
+            : "/api/attendance/uploadGlog";
+
+            const response = await fetch(uploadUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(processedGLogRef.current),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to save entries");
+            throw new Error("Failed to save entries");
             }
 
-            alert("Entries merged successfully!");
+            alert(`${isGDoc ? "GDoc" : "GLog"} entries uploaded successfully!`);
             handleCancel();
         } catch (error) {
-            console.error("Error merging entries:", error);
-            alert("Failed to merge entries. Please try again.");
+            console.error("Error uploading entries:", error);
+            alert("Failed to upload entries. Please try again.");
         }
-    }
+    };
 
     const FileUploadButton = ({
         label,
@@ -164,17 +222,17 @@ const MergeTableView = () => {
             const headers = headerLine.split(",").map((h) => h.trim().toUpperCase());
 
             return lines.map((line) => {
-                const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(val =>
-                val.replace(/^"+|"+$/g, "").trim()
-                ) || [];
+                const values = line.split(",").map(val => val.trim());
+                if (values.length < headers.length) return null; // skip broken lines
 
                 const entry: any = {};
                 headers.forEach((header, i) => {
                 entry[header] = values[i];
                 });
                 return entry;
-            });
+            }).filter(Boolean);
         };
+
 
         return (
             <div className="FileUploadContainer">
@@ -199,54 +257,35 @@ const MergeTableView = () => {
         <div className="ImportAreaWrapper">
         
             <div className="GlogWrapper">
-                <FileUploadButton
+               <FileUploadButton
                     label="Upload GLog"
                     onFileParsed={(rows) => {
+                        processGLogData(rows).then((processed) => {
+                        processedGLogRef.current = processed;
                         setGlogData(rows);
-                        if (gdocData.length > 0) crossReferenceFiles(gdocData, rows);
+                        console.log("📄 Parsed GLog CSV rows:", rows);
+                        console.log("🧠 Processed entries with employee info:", processed);
+                        });
                     }}
-                    />
+                />
             </div>
 
-            <div className="GdocWrapper">
-                <FileUploadButton
-                    label="Upload GDoc"
-                    onFileParsed={(rows) => {
-                        setGdocData(rows);
-                        if (glogData.length > 0) crossReferenceFiles(rows, glogData);
-                    }}
-                    />
-            </div>
+            <FileUploadButton
+                label="Upload GDoc"
+                onFileParsed={(rows) => {
+                    processGDocData(rows).then((processed) => {
+                    processedGLogRef.current = processed;
+                    setGdocData(rows);
+                    console.log("📄 Parsed GDoc rows:", rows);
+                    console.log("🧠 Processed GDoc entries:", processed);
+                    });
+                }}
+            />
 
       </div>
     
 
         <div className="SummaryAndPreviewWrapper">
-            <div className="MatchingSummaryWrapper">
-                <div className="MatchingHeader text"> 
-                
-                Matching Summary
-
-                </div>
-                <div className="insideSummaryBox smalltext">
-                    <div>
-                        <span>{unmatchedGlogCount === 0 ? "✓" : "⚠️"}</span>{" "}
-                        {unmatchedGlogCount === 0
-                        ? "All GLog entries matched."
-                        : `${unmatchedGlogCount} unmatched entries from GLog`}
-                    </div>
-                    <div>
-                        <span>{unmatchedGdocCount === 0 ? "✓" : "⚠️"}</span>{" "}
-                        {unmatchedGdocCount === 0
-                        ? "All GDoc entries matched."
-                        : `${unmatchedGdocCount} unmatched entries from GDoc`}
-                    </div>
-                </div>
-                <div className="PrevAndNextButtonWrapper ReverseRowWrapper">
-                    <button onClick={handleMerge}>Merge Files</button>
-                    <button onClick={handleCancel}>Cancel</button>
-                </div>
-            </div>
             <div className="FilePreviewWrapper">
                 <div className="PreviewHeader">
                     <div className="FileName text">
@@ -256,101 +295,46 @@ const MergeTableView = () => {
                         
                     </div>
                     <div className="TitleOfFile text">
-                        Merged Data Preview
+                        Data Preview
                     </div>
 
                 </div>
                 <div className="ActualTableWrapper">
-                    {crossMatchedEntries.length > 0 && (
+                    {processedGLogRef.current.length > 0 && (
                     <Box mt={4}>
                         <Table size="sm">
                         <Thead bg="#A4B465">
                         <Tr>
+                            <Th>Employee ID</Th>
                             <Th>Last Name</Th>
                             <Th>First Name</Th>
-                            <Th>Middle Initial</Th>
-                            <Th>Action</Th>
-                            <Th>Note</Th>
+                            <Th>Type</Th>
                             <Th>DateTime</Th>
                         </Tr>
                         </Thead>
                         <Tbody>
-                            {crossMatchedEntries.map((entry, idx) => (
-                                <Tr key={idx} bg={idx % 2 === 0 ? "rgba(251, 252, 229, 0.93)" : "rgba(230, 226, 177, 0.93)"}>
-                                    <Td>{entry.lastName}</Td>
-                                    <Td>{entry.firstName}</Td>
-                                    <Td>{entry.middleInitial}</Td>
-                                    <Td>{entry.action}</Td>
-                                    <Td>{entry.note}</Td>
-                                    <Td>{entry.datetime}</Td>
-                                </Tr>
-                                ))}
+                            {processedGLogRef.current.map((entry, idx) => (
+                            <Tr key={idx} bg={idx % 2 === 0 ? "rgba(251, 252, 229, 0.93)" : "rgba(230, 226, 177, 0.93)"}>
+                                <Td>{entry.employeeID}</Td>
+                                <Td>{entry.lastName}</Td>
+                                <Td>{entry.firstName}</Td>
+                                <Td>{entry.type}</Td>
+                                <Td>{entry.datetime}</Td>
+                            </Tr>
+                            ))}
                         </Tbody>
                         </Table>
                     </Box>
                     )}
-                </div>
-                <div className="PagnationWrapper"> 
-                    {
-                        //PAGINATION NOT WORKING BEACUSE IM NOT SURE HOW THE OBJECTS WILL LOOK SORRY DEVS
-                    }
-                    <Flex
-                        position="relative"
-                       
-                        align="center"
-                        justify="center"
-                        gap={2}
-                        zIndex={10}
-                        bg="#FFFCD9"
-                        p={2}
-                        borderRadius="md"
-                        boxShadow="0px 0px 16px  rgba(0, 0, 0, 0.1)"
+                    <Flex justify="flex-end" mt={4}>
+                        <Button
+                            colorScheme="green"
+                            onClick={handleUpload}
+                            isDisabled={processedGLogRef.current.length === 0}
                         >
-                        <IconButton
-                            icon={<ChevronLeftIcon />}
-                            aria-label="Previous page"
-                            size="sm"
-                            color="#638813"
-                            
-                            _hover={{ bg: "#E6E2B1",color: "#FFCF50" }}
-                            isDisabled={false} 
-                        />
-                        <Button 
-                            size="sm" 
-                            color="#626F47" 
-                            variant="ghost"
-                            _hover={{ color: "#FFCF50" }}
-                        >
-                            1
+                            Upload to Database
                         </Button>
-                        <Input
-                            value="1" //Static value
-                            size="sm"
-                            width="44px"
-                            color="#638813"
-                            textAlign="center"
-                            
-                            mx={1}
-                            readOnly 
-                        />
-                        <Button 
-                            size="sm" 
-                            color="#638813"
-                            
-                            _hover={{ color: "#FFCF50" }}
-                        >
-                            5 {/* Example total pages */}
-                        </Button>
-                        <IconButton
-                            icon={<ChevronRightIcon />}
-                            aria-label="Next page"
-                            color="#638813"
-                            size="sm"
-                            bg="red"
-                            _hover={{color: "#FFCF50"}}
-                            isDisabled={false} 
-                        />
-                        </Flex>
+                    </Flex>
                 </div>
             </div>
 
