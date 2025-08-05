@@ -19,18 +19,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const existingEmployees = await Employee.find({}, 'employeeID firstName lastName middleName');
     const usedIds = new Set(existingEmployees.map(e => e.employeeID));
 
-    // Helper to generate next 9-digit ID
-    const getNextEmployeeID = () => {
-      for (let i = 1; i < 1e9; i++) {
-        const padded = i.toString().padStart(9, '0');
-        if (!usedIds.has(Number(padded))) {
-          usedIds.add(Number(padded));
-          return Number(padded);
-        }
-      }
-      throw new Error("⚠️ Exhausted employee ID space");
-    };
-
     for (const entry of entries) {
       const { lastName, firstName, middleName = "" } = entry;
 
@@ -44,10 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // 👤 If not found, create a new employee with generated ID
       if (!employee) {
-        const newId = getNextEmployeeID();
-
         employee = await Employee.create({
-          employeeID: newId,
+          employeeID: entry.employeeID,
           lastName: lastName || "N/A",
           firstName: firstName || "N/A",
           middleName: middleName || "",

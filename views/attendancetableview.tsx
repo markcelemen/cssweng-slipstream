@@ -19,6 +19,7 @@ import {
   ModalCloseButton,
   useDisclosure,
   HStack,
+  VStack,
 } from "@chakra-ui/react";
 import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import React, { useRef, useState, useEffect } from "react";
@@ -28,6 +29,7 @@ import {
 } from "../src/utils/attendance/tableSelectionPagination";
 
 type Log = {
+  _id?: string;
   id: number;
   date: string;
   time: string;
@@ -101,20 +103,44 @@ const AttendanceTableView = () => {
 
   //Sample Data
   useEffect(() => {
-    const mockLogs: Log[] = Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    date: `2023-05-${String(Math.floor(i / 10) + 1).padStart(2, '0')}`,
-    time: `${8 + Math.floor(i % 10)}:${String((i * 7) % 60).padStart(2, '0')}`,
-    employeeID: 1000 + i,
-    lastName: `Lastname${i}`,
-    firstName: `Firstname${i}`,
-    middleName: `M${i}`,
-    type: ['Time In', 'Time Out'][i % 2],
-    source: ['Gdoc', 'Biometric'][i % 2],
-    note: `Sample note for entry ${i + 1}`,
-  }));
-    setLogs(mockLogs);
+    const fetchAttendanceLogs = async () => {
+      try {
+        const res = await fetch("/api/attendance/all");
+        const data = await res.json();
+
+        console.log("📦 Raw attendance entries from DB:", data);
+
+        if (!Array.isArray(data)) {
+          console.error("Invalid response for attendance:", data);
+          return;
+        }
+
+        const transformed: Log[] = data.map((entry, idx) => {
+          const datetime = new Date(entry.datetime);
+          return {
+            _id: entry._id,
+            id: idx + 1,
+            date: datetime.toLocaleDateString("en-CA"), // outputs YYYY-MM-DD
+            time: datetime.toLocaleTimeString("en-GB", { hour: '2-digit', minute: '2-digit' }), // 24h format
+            employeeID: entry.employeeID,
+            lastName: entry.lastName || "",
+            firstName: entry.firstName || "",
+            middleName: entry.middleName || "",
+            type: entry.type,
+            source: entry.source,
+            note: entry.note || "",
+          };
+        });
+
+        setLogs(transformed);
+      } catch (err) {
+        console.error("Failed to fetch attendance logs:", err);
+      }
+    };
+
+    fetchAttendanceLogs();
   }, []);
+
 
   //DESELECT CONTEXT MENU WHEN CLICKING OUTSIDE MENU
   useEffect(() => {
@@ -131,19 +157,59 @@ const AttendanceTableView = () => {
   }, [contextMenu]);
 
   const handleUpdateLog = () => {
-  if (!newLog.note.trim()) {
-    alert("Note cannot be empty.");
-    return;
-  }
+    if (!newLog.note.trim()) {
+      alert("Note cannot be empty.");
+      return;
+    }
 
-  const updatedLogs = logs.map((log, i) =>
-    i === contextMenu?.row ? { ...log, note: newLog.note } : log
-  );
-  setLogs(updatedLogs);
-  setIsEditing(false);
-  onClose();
-  setContextMenu(null);
-};
+    const updatedLogs = logs.map((log, i) =>
+      i === contextMenu?.row ? { ...log, note: newLog.note } : log
+    );
+    setLogs(updatedLogs);
+    setIsEditing(false);
+    onClose();
+    setContextMenu(null);
+  };
+
+  const handleDeleteLog = async () => {
+    const isMultiple = selectedRows.length > 1;
+
+    const entriesToDelete = isMultiple
+      ? selectedRows
+          .map((i) => logs[i]?._id)
+          .filter((id): id is string => !!id)
+      : [logs[contextMenu?.row || 0]?._id].filter((id): id is string => !!id);
+
+    if (entriesToDelete.length === 0) return;
+
+    const confirmed = window.confirm(
+      isMultiple
+        ? `Delete ${entriesToDelete.length} selected entries?`
+        : "Are you sure you want to delete this entry?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch("/api/attendance/delete", {
+        method: isMultiple ? "POST" : "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: isMultiple
+          ? JSON.stringify({ ids: entriesToDelete })
+          : undefined,
+      });
+
+      if (!res.ok) throw new Error("Failed to delete");
+
+      const updated = logs.filter((log) => !entriesToDelete.includes(log._id!));
+      setLogs(updated);
+      setSelectedRows([]);
+      setContextMenu(null);
+    } catch (err) {
+      console.error("Failed to delete log(s):", err);
+      alert("Failed to delete attendance entry(ies).");
+    }
+  };
+
 
   return (
     <Box minH="100vh" width="100vw" display="flex" flexDirection="column" justifyContent="space-between" ref={outerWrapperRef}>
@@ -249,21 +315,31 @@ const AttendanceTableView = () => {
             p={2}
             minW="180px"
           >
-            <Button
-              size="sm"
-              w="100%"
-              onClick={() => {
-                const selected = logs[contextMenu.row];
-                if (selected) {
-                  setNewLog({ ...selected }); // prefill modal with selected log
-                  setIsEditing(true);
-                  onOpen();
-                }
-                setContextMenu(null);
-              }}
-            >
-              Edit Attendance Note
-            </Button>
+            <VStack spacing={2}>
+              <Button
+                size="sm"
+                w="100%"
+                onClick={() => {
+                  const selected = logs[contextMenu.row];
+                  if (selected) {
+                    setNewLog({ ...selected });
+                    setIsEditing(true);
+                    onOpen();
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                Edit Attendance Note
+              </Button>
+              <Button
+                size="sm"
+                w="100%"
+                colorScheme="red"
+                onClick={handleDeleteLog}
+              >
+                Delete Entry
+              </Button>
+            </VStack>
           </Box>
         )}
         </Box>
