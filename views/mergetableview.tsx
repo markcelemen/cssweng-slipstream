@@ -8,6 +8,7 @@ import {
   Td,
   Button,
   Flex,
+  HStack,
 } from "@chakra-ui/react";
 import React, { useRef, useState} from "react";
 
@@ -436,38 +437,38 @@ const MergeTableView = () => {
 
         <div className="ImportAreaWrapper">
         
-            <div className="GlogWrapper">
-               <FileUploadButton
+            <HStack spacing={400} align="flex-start" mb={6}>
+                <FileUploadButton
                     label="Upload GLog"
                     source="GLog"
                     onFileParsed={(rows) => {
-                        setPayrollRows([]);
-                        processGLogData(rows).then((processed) => {
+                    setPayrollRows([]);
+                    processGLogData(rows).then((processed) => {
                         processedGLogRef.current = processed;
                         setGlogData(rows);
-                        });
+                    });
                     }}
                 />
-            </div>
 
-            <FileUploadButton
-                label="Upload GDoc"
-                source="GDoc"
-                onFileParsed={(rows) => {
+                <FileUploadButton
+                    label="Upload GDoc"
+                    source="GDoc"
+                    onFileParsed={(rows) => {
                     setPayrollRows([]);
                     processGDocData(rows).then((processed) => {
-                    processedGLogRef.current = processed;
-                    setGdocData(rows);
+                        processedGLogRef.current = processed;
+                        setGdocData(rows);
                     });
-                }}
-            />
+                    }}
+                />
 
-            <FileUploadButton
-                label="Upload Payroll File"
-                onFileParsed={(rows) => {
+                <FileUploadButton
+                    label="Upload Payroll File"
+                    onFileParsed={(rows) => {
                     handlePayrollUpload(rows);
-                }}
-            />
+                    }}
+                />
+                </HStack>
 
 
       </div>
