@@ -206,7 +206,7 @@ const AttendanceTableView = () => {
         headers: { "Content-Type": "application/json" },
         body: isMultiple
           ? JSON.stringify({ ids: entriesToDelete })
-          : undefined,
+          : JSON.stringify({ id: entriesToDelete[0] }),
       });
 
       if (!res.ok) throw new Error("Failed to delete");
