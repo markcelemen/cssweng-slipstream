@@ -43,21 +43,16 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
   const [nextID, setNextID] = useState<number | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; date: string } | null>(null);
   const [ptoContextMenu, setPtoContextMenu] = useState<{ x: number; y: number; date: string } | null>(null);
-  const [attendanceData, setAttendanceData] = useState<{ date: string; inTime: string; outTime: string }[]>([]);
-
-
-    const ptoData = [
-    { date: "Wednesday, 16 April 2025", credited: 0.5 },
-    { date: "Friday, 18 April 2025", credited: 0.5 },
-    { date: "Tuesday, 22 April 2025", credited: 1.0 },
-    { date: "Thursday, 24 April 2025", credited: 0.25 },
-    { date: "Friday, 25 April 2025", credited: 1.0 },
-    { date: "Friday, 25 April 2025", credited: 1.0 },
-    { date: "Friday, 25 April 2025", credited: 1.0 },
-    { date: "Friday, 25 April 2025", credited: 1.0 },
-    { date: "Friday, 25 April 2025", credited: 1.0 },
-    { date: "Friday, 25 April 2025", credited: 1.0 },
-    ];
+  type AttendanceEntry = { date: string; inTime: string; outTime: string; note: string };
+  const [attendanceData, setAttendanceData] = useState<AttendanceEntry[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth()); // 0-indexed
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [isPtoModalOpen, setIsPtoModalOpen] = useState(false);
+  const [ptoTargetDate, setPtoTargetDate] = useState<string>("");
+  const [ptoData, setPtoData] = useState<{ date: string; credited: number }[]>([]);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState("");
+  const [exportEndDate, setExportEndDate] = useState("");
 
 
   useEffect(() => {
@@ -101,57 +96,119 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
     });
 
   fetch(`/api/attendance/employee/${id}`)
-    .then((res) => res.json())
-    .then((logs) => {
+  .then((res) => res.json())
+  .then((logs) => {
+    const now = new Date();
+    const start = new Date(now);
+    const end = new Date(now);
 
-      const grouped = new Map<string, { inTime?: string; outTime?: string }>();
+    start.setMonth(start.getMonth() - 1, start.getDate() - 15);
+    end.setMonth(end.getMonth() + 1, end.getDate() + 15);
 
-      logs.forEach((entry: any) => {
-        const dt = new Date(entry.datetime);
-        const type = (entry.type || "").toLowerCase().trim();
-        const dateStr = dt.toLocaleDateString("en-PH", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-          timeZone: "Asia/Manila",
-        });
+  const grouped = new Map<string, { inTime?: string; outTime?: string; notes?: string[] }>();
 
-        const timeStr = dt.toLocaleTimeString("en-PH", {
-          hour: "numeric",
-          minute: "2-digit",
-          timeZone: "Asia/Manila",
-        });
-        
-        if (!grouped.has(dateStr)) grouped.set(dateStr, {});
-        const record = grouped.get(dateStr)!;
-        if ((type === "check in" || type === "incomplete") && !record.inTime) {
-          record.inTime = timeStr;
-        }
+  logs.forEach((entry: any) => {
+    const dt = new Date(entry.datetime);
+    const type = (entry.type || "").toLowerCase().trim();
 
-        if (type === "check out") {
-          record.outTime = timeStr;
-        }
+    const monthMatches = dt.getMonth() === selectedMonth;
+    const yearMatches = dt.getFullYear() === selectedYear;
+    if (!monthMatches || !yearMatches) return;
 
-        if (type === "incomplete" && !record.outTime) {
-          record.outTime = "Incomplete";
-        }
-      });
+    const dateKey = dt.toLocaleDateString("en-PH", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Asia/Manila",
+    });
 
-      const formatted = Array.from(grouped.entries()).map(([date, times]) => ({
-        date,
-        inTime: times.inTime || "-",
-        outTime: times.outTime || "-",
-      }));
+    const timeStr = dt.toLocaleTimeString("en-PH", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: "Asia/Manila",
+    });
 
-      setAttendanceData(formatted);
-    })
-    .catch(err => {
-      console.error("Failed to fetch attendance for employee:", err);
+    if (!grouped.has(dateKey)) grouped.set(dateKey, { notes: [] });
+      const record = grouped.get(dateKey)!;
+      if (entry.note) {
+        record.notes = [...(record.notes || []), entry.note];
+    }
+
+    if ((type === "check in" || type === "incomplete") && !record.inTime) {
+      record.inTime = timeStr;
+    }
+    if (type === "check out") {
+      record.outTime = timeStr;
+    }
+    if (type === "incomplete" && !record.outTime) {
+      record.outTime = "Incomplete";
+    }
   });
-}, [id]);
 
+  const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+  const completeMonthData: AttendanceEntry[] = [];
 
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(selectedYear, selectedMonth, day);
+    const formattedDate = date.toLocaleDateString("en-PH", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Asia/Manila",
+    });
+
+    const record = grouped.get(formattedDate);
+    const hasFullPTO = ptoData.some((pto) => pto.date === formattedDate && pto.credited === 1);
+
+    completeMonthData.push({
+      date: formattedDate,
+      inTime: hasFullPTO ? "PTO" : record?.inTime || "-",
+      outTime: hasFullPTO ? "PTO" : record?.outTime || "-",
+      note: record?.notes?.join(" | ") || "-"
+    });
+  }
+
+  setAttendanceData(completeMonthData);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch attendance for employee:", err);
+    });
+}, [id, selectedMonth, selectedYear, ptoData]);
+
+useEffect(() => {
+  if (!id) return;
+
+  fetch(`/api/ptoentries/${id}`)
+    .then((res) => res.json())
+    .then((entries: { date: string; credit: number }[]) => {
+      const filtered = entries
+        .map((entry: { date: string; credit: number }) => {
+          const dt = new Date(entry.date);
+          if (dt.getMonth() !== selectedMonth || dt.getFullYear() !== selectedYear) return null;
+
+          const formattedDate = dt.toLocaleDateString("en-PH", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            timeZone: "Asia/Manila",
+          });
+
+          return {
+            date: formattedDate,
+            credited: entry.credit,
+          };
+        })
+        .filter((entry): entry is { date: string; credited: number } => entry !== null);
+
+      setPtoData(filtered);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch PTO data:", err);
+    });
+}, [id, selectedMonth, selectedYear]);
 
   return (
     <Box bg="FAF6C7" minH="100vh" w="100vw" p="6">
@@ -348,10 +405,11 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
             color="#4A6100"
             align="start"
             >
-            <Box flex="4" display="flex">
-                <Box flex="2" px="2">Date</Box>
-                <Box flex="1" px="2">In Time</Box>
-                <Box flex="1" px="2">Out Time</Box>
+            <Box flex="5" display="flex">
+              <Box flex="2" px="2">Date</Box>
+              <Box flex="1" px="2">In Time</Box>
+              <Box flex="1" px="2">Out Time</Box>
+              <Box flex="1" px="2">Notes</Box>
             </Box>
             <Box flex="3" display="flex" borderLeft="2px solid #4A6100">
                 <Box flex="2" px="2">PTO Date</Box>
@@ -359,31 +417,65 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
             </Box>
             </HStack>
 
+            <HStack spacing="4" px="4" py="2">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              >
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <option key={i} value={i}>
+                    {new Date(0, i).toLocaleString("default", { month: "long" })}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              >
+                {Array.from({ length: 10 }).map((_, i) => {
+                  const year = new Date().getFullYear() - 5 + i;
+                  return (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  );
+                })}
+              </select>
+            </HStack>
+
+
             {/* Scrollable Panels */}
             <Flex flex="1" maxH="540px" overflow="hidden">
             {/* Left scrollable section */}
-            <Box flex="4" overflowY="auto">
-                {attendanceData.map((record, index) => (
-                  <HStack
-                    key={index}
-                    px="4"
-                    py="2"
-                    bg={index % 2 === 0 ? "#FFFCD9" : "#FAF6C7"}
-                    borderBottom="1px solid #E0E0B0"
-                    fontSize="sm"
-                    spacing="0"
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setPtoContextMenu(null);
-                      setContextMenu({ x: e.clientX, y: e.clientY, date: record.date });
-                    }}
-                    _hover={{ bg: "#FFD566", cursor: "pointer" }}
-                  >
-                    <Box flex="2" px="2">{record.date}</Box>
-                    <Box flex="1" px="2">{record.inTime}</Box>
-                    <Box flex="1" px="2">{record.outTime}</Box>
-                  </HStack>
-                ))}
+            <Box flex="5" overflowY="auto">
+                {attendanceData.map((record, index) => {
+                  const isWeekend = ["Saturday", "Sunday"].some(day => record.date.startsWith(day));
+                  const bgColor = isWeekend ? "#EEEEEE" : index % 2 === 0 ? "#FFFCD9" : "#FAF6C7";
+                  const textColor = isWeekend ? "#000000" : "inherit";
+
+                  return (
+                    <HStack
+                      key={index}
+                      px="4"
+                      py="2"
+                      bg={bgColor}
+                      borderBottom="1px solid #E0E0B0"
+                      fontSize="sm"
+                      spacing="0"
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setPtoContextMenu(null);
+                        setContextMenu({ x: e.clientX, y: e.clientY, date: record.date });
+                      }}
+                      _hover={{ bg: isWeekend ? "#D4D4D4" : "#FFD566", cursor: "pointer" }}
+                    >
+                      <Box flex="2" px="2">{record.date}</Box>
+                      <Box flex="1" px="2">{record.inTime}</Box>
+                      <Box flex="1" px="2">{record.outTime}</Box>
+                      <Box flex="1" px="2">{record.note}</Box>
+                    </HStack>
+                  );
+                })}
             </Box>
 
             {/* Right scrollable section */}
@@ -423,15 +515,19 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
                 >
 
             <HStack spacing="6">
-                <Text color="#638813" fontWeight="semibold">
-                Total Deductions
-                </Text>
-                <Text fontWeight="semibold">0.00 PHP</Text>
+                <Button
+                  bg="#4A6100"
+                  color="#FFCF50"
+                  _hover={{ bg: "#3A4E00" }}
+                  onClick={() => setIsExportModalOpen(true)}
+                >
+                  Export as CSV
+                </Button>
                 <Text color="#638813" fontWeight="semibold">
                 PTO’s Remaining:
                 </Text>
                 <Text fontWeight="bold" color="#4A6100">
-                5
+                  {employee?.numberOfPTOs ?? 0}
                 </Text>
             </HStack>
 
@@ -473,7 +569,8 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
                 size="sm"
                 w="100%"
                 onClick={() => {
-                  alert(`Add PTO on ${contextMenu.date}`);
+                  setPtoTargetDate(contextMenu.date);
+                  setIsPtoModalOpen(true);
                   setContextMenu(null);
                 }}
               >
@@ -500,8 +597,44 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
                 size="sm"
                 w="100%"
                 colorScheme="red"
-                onClick={() => {
-                  alert(`Remove PTO on ${ptoContextMenu.date}`);
+                onClick={async () => {
+                  const res = await fetch("/api/ptoentries/delete", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      employeeID: Number(id),
+                      date: new Date(ptoContextMenu.date),
+                    }),
+                  });
+
+                  if (res.ok) {
+                    const result = await res.json();
+
+                    // Remove from local PTO panel
+                    setPtoData((prev) => prev.filter(p => p.date !== ptoContextMenu.date));
+
+                    // Restore PTO in frontend state
+                    setEmployee((prev) =>
+                      prev ? { ...prev, numberOfPTOs: (prev.numberOfPTOs ?? 0) + result.credit } : prev
+                    );
+
+                    toast({
+                      title: "PTO Removed",
+                      description: `Credit restored: ${result.credit}`,
+                      status: "info",
+                      duration: 2000,
+                      isClosable: true,
+                    });
+                  } else {
+                    toast({
+                      title: "Failed",
+                      description: "Could not remove PTO.",
+                      status: "error",
+                      duration: 2000,
+                      isClosable: true,
+                    });
+                  }
+
                   setPtoContextMenu(null);
                 }}
               >
@@ -510,6 +643,204 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
             </VStack>
           </Box>
         )}
+        {isPtoModalOpen && (
+          <Box
+            position="fixed"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            zIndex={9999}
+            bg="#FFFCD9"
+            border="2px solid #A4B465"
+            borderRadius="md"
+            p={6}
+            boxShadow="lg"
+          >
+            <VStack spacing={4}>
+              <Text fontWeight="bold" color="#4A6100">
+                Add PTO on {ptoTargetDate}
+              </Text>
+              <HStack spacing={4}>
+                {[0.5, 1].map((value) => (
+                  <Button
+                    key={value}
+                    bg="#4A6100"
+                    color="#FFCF50"
+                    _hover={{ bg: "#3A4E00" }}
+                    onClick={async () => {
+                    const creditAmount = value;
+
+                    // Prevent if not enough PTOs
+                    if ((employee?.numberOfPTOs ?? 0) < creditAmount) {
+                      toast({
+                        title: "Insufficient PTO",
+                        description: `You only have ${employee?.numberOfPTOs ?? 0} PTOs remaining.`,
+                        status: "error",
+                        duration: 2500,
+                        isClosable: true,
+                      });
+                      return;
+                    }
+
+                    const res = await fetch("/api/ptoentries/add", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        employeeID: Number(id),
+                        date: new Date(ptoTargetDate),
+                        credit: creditAmount,
+                      }),
+                    });
+
+                    if (res.ok) {
+                      const newPto = { date: ptoTargetDate, credited: creditAmount };
+                      setPtoData((prev) => [...prev, newPto]);
+
+                      // Decrease PTO count in frontend
+                      setEmployee((prev) =>
+                        prev ? { ...prev, numberOfPTOs: (prev.numberOfPTOs ?? 0) - creditAmount } : prev
+                      );
+
+                      toast({
+                        title: "PTO Added",
+                        description: `${creditAmount} credited on ${ptoTargetDate}`,
+                        status: "success",
+                        duration: 2000,
+                        isClosable: true,
+                      });
+                    } else {
+                      toast({
+                        title: "Failed",
+                        description: "Could not add PTO.",
+                        status: "error",
+                        duration: 2000,
+                        isClosable: true,
+                      });
+                    }
+
+                    setIsPtoModalOpen(false);
+                  }}
+                  >
+                    +{value}
+                  </Button>
+                ))}
+              </HStack>
+              <Button
+                variant="outline"
+                color="#4A6100"
+                border="1px solid #4A6100"
+                _hover={{ bg: "#F6F4CF" }}
+                onClick={() => setIsPtoModalOpen(false)}
+              >
+                Cancel
+              </Button>
+            </VStack>
+          </Box>
+        )}
+        {isExportModalOpen && (
+        <Box
+          position="fixed"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          zIndex={9999}
+          bg="#FFFCD9"
+          border="2px solid #A4B465"
+          borderRadius="md"
+          p={6}
+          boxShadow="lg"
+        >
+          <VStack spacing={4}>
+            <Text fontWeight="bold" color="#4A6100">Select Date Range to Export</Text>
+            <Input
+              type="date"
+              value={exportStartDate}
+              onChange={(e) => setExportStartDate(e.target.value)}
+              bg="#FFFCD9"
+              border="1px solid #A4B465"
+            />
+            <Input
+              type="date"
+              value={exportEndDate}
+              onChange={(e) => setExportEndDate(e.target.value)}
+              bg="#FFFCD9"
+              border="1px solid #A4B465"
+            />
+            <HStack>
+              <Button
+                colorScheme="green"
+                onClick={() => {
+                  if (!exportStartDate || !exportEndDate) return toast({
+                    title: "Missing dates",
+                    description: "Please select both start and end dates.",
+                    status: "warning",
+                    duration: 2000,
+                    isClosable: true
+                  });
+
+                  const start = new Date(exportStartDate);
+                  const end = new Date(exportEndDate);
+
+                  const dateList: string[] = [];
+                  const loopDate = new Date(start);
+                  while (loopDate <= end) {
+                    const formatted = loopDate.toLocaleDateString("en-PH", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                      timeZone: "Asia/Manila"
+                    });
+                    dateList.push(formatted);
+                    loopDate.setDate(loopDate.getDate() + 1);
+                  }
+
+                  const csvRows = [
+                    ["Date", "In Time", "Out Time", "PTO Date", "Credited"],
+                    ...dateList.map(date => {
+                      const att = attendanceData.find(a => a.date === date);
+                      const fullPto = ptoData.find(p => p.date === date && p.credited === 1); // For PTO override
+                      const anyPto = ptoData.find(p => p.date === date); // For PTO Date / Credited columns
+                      return [
+                        date,
+                        fullPto ? "PTO" : att?.inTime ?? "-",
+                        fullPto ? "PTO" : att?.outTime ?? "-",
+                        anyPto?.date ?? "",
+                        anyPto?.credited?.toString() ?? ""
+                      ];
+                    })
+                  ];
+
+                  const csvContent = csvRows.map(row =>
+                    row.map(cell => `"${cell}"`).join(",")
+                  ).join("\n");
+
+                  const blob = new Blob([csvContent], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `Attendance_${employee?.firstName}_${employee?.lastName}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  setIsExportModalOpen(false);
+                }}
+              >
+                Export
+              </Button>
+              <Button
+                variant="outline"
+                color="#4A6100"
+                border="1px solid #4A6100"
+                _hover={{ bg: "#F6F4CF" }}
+                onClick={() => setIsExportModalOpen(false)}
+              >
+                Cancel
+              </Button>
+            </HStack>
+          </VStack>
+        </Box>
+      )}
       </Flex>
     </Box>
   );
