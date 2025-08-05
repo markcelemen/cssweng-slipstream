@@ -16,17 +16,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     for (const entry of entries) {
-      const { lastName, firstName, middleName = "" } = entry;
+      const { lastName, firstName, middleName = "", employeeID } = entry;
 
-      const employee = await Employee.findOne({
+      let employee = await Employee.findOne({
         lastName: new RegExp(`^${lastName}$`, "i"),
         firstName: new RegExp(`^${firstName}$`, "i"),
         middleName: new RegExp(`^${middleName}$`, "i"),
       });
 
       if (!employee) {
-        console.warn(`No match found for: ${lastName}, ${firstName} ${middleName}`);
-        continue;
+        employee = await Employee.create({
+          employeeID: employeeID,
+          lastName,
+          firstName,
+          middleName,
+          department: "N/A",
+          coordinator: false,
+          position: "N/A",
+          contactInfo: "09123456789",
+          email: "employee@gmail.com",
+          totalSalary: 0,
+          basicSalary: 0,
+          remarks: "",
+        });
       }
 
       await AttendanceEntryModel.create({

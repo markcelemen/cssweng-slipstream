@@ -25,6 +25,8 @@ interface MergedAttendanceEntry {
 const MergeTableView = () => {
     const [gdocData, setGdocData] = useState<any[]>([]);
     const [glogData, setGlogData] = useState<any[]>([]);
+    const [payrollRows, setPayrollRows] = useState<any[]>([]);
+    const [existingPayrollIDs, setExistingPayrollIDs] = useState<number[]>([]);
     const processedGLogRef = useRef<MergedAttendanceEntry[]>([]);
 
     const handleCancel = () => {
@@ -246,6 +248,94 @@ const MergeTableView = () => {
         }
     };
 
+    const handlePayrollUpload = async (rows: any[]) => {
+    console.log("📄 Parsed Payroll CSV rows:", rows);
+    processedGLogRef.current = [];
+    setPayrollRows(rows);
+
+    const ids = rows.map((r) => parseInt(r["ID"])).filter((id) => !isNaN(id));
+
+    try {
+        const res = await fetch("/api/employees/by-ids", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+        });
+
+        const existing = await res.json();
+        if (Array.isArray(existing)) {
+        const existingIDs = existing.map((e: any) => e.employeeID);
+        setExistingPayrollIDs(existingIDs);
+        console.log("Duplicate employee IDs found in payroll:", existingIDs);
+        }
+    } catch (err) {
+        console.error("Failed to fetch existing employees:", err);
+    }
+    };
+
+    const handleUploadPayroll = async () => {
+        for (const row of payrollRows) {
+            const id = parseInt(row["ID"]);
+            const nameParts = (row["NAME"] || "").split(", ");
+            const lastName = nameParts[0]?.trim() || "";
+            const rest = nameParts[1] || "";
+            const nameWords = rest.trim().split(" ");
+            const middleName = nameWords.pop() || "";
+            const firstName = nameWords.join(" ");
+
+            const newEmployee = {
+                employeeID: id,
+                lastName,
+                firstName,
+                middleName,
+                position: row["POSITION"] || "",
+                totalSalary: parseFloat(row["MONTHLY TOTAL PAY"].replace(/[₱,]/g, "")),
+                basicSalary: parseFloat(row["BASIC PAY"].replace(/[₱,]/g, "")),
+                department: "N/A",
+                coordinator: false,
+                contactInfo: "09123456789",
+                email: "employee@gmail.com",
+                remarks: "",
+            };
+
+
+            try {
+            const res = await fetch("/api/employees/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newEmployee),
+            });
+
+            if (!res.ok) {
+                console.error("❌ Failed to add:", newEmployee);
+            }
+            } catch (err) {
+            console.error("❌ Upload error:", err);
+            }
+        }
+
+        alert("Payroll upload complete.");
+        setPayrollRows([]);
+    };
+
+    const parsePayrollCSV = (text: string) => {
+        const normalizedText = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+        const lines = normalizedText.split("\n").filter(Boolean);
+        const headers = lines[0].split(",").map((h) => h.trim().toUpperCase());
+
+        return lines.slice(1).map((line) => {
+            const values = line.match(/(".*?"|[^",\n\r]+)(?=\s*,|\s*$)/g)?.map((val) =>
+            val.replace(/^"|"$/g, "").trim()
+            ) || [];
+
+            const entry: any = {};
+            headers.forEach((header, i) => {
+            entry[header] = values[i];
+            });
+            return entry;
+        });
+        };
+
     const FileUploadButton = ({
         label,
         onFileParsed,
@@ -253,7 +343,7 @@ const MergeTableView = () => {
         }: {
         label: string;
         onFileParsed: (rows: any[]) => void;
-        source: "GLog" | "GDoc";
+        source?: "GLog" | "GDoc";
         }) => {
         const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -262,7 +352,14 @@ const MergeTableView = () => {
             if (!file) return;
 
             const text = await file.text();
-            const rows = source === "GDoc" ? parseGDocCSV(text) : parseCSVManually(text);
+            let rows;
+            if (label.includes("GDoc")) {
+            rows = parseGDocCSV(text);
+            } else if (label.includes("Payroll")) {
+            rows = parsePayrollCSV(text);
+            } else {
+            rows = parseCSVManually(text);
+            }
             onFileParsed(rows);
         };
 
@@ -345,6 +442,7 @@ const MergeTableView = () => {
                     label="Upload GLog"
                     source="GLog"
                     onFileParsed={(rows) => {
+                        setPayrollRows([]);
                         processGLogData(rows).then((processed) => {
                         processedGLogRef.current = processed;
                         setGlogData(rows);
@@ -359,6 +457,7 @@ const MergeTableView = () => {
                 label="Upload GDoc"
                 source="GDoc"
                 onFileParsed={(rows) => {
+                    setPayrollRows([]);
                     processGDocData(rows).then((processed) => {
                     processedGLogRef.current = processed;
                     setGdocData(rows);
@@ -367,6 +466,14 @@ const MergeTableView = () => {
                     });
                 }}
             />
+
+            <FileUploadButton
+                label="Upload Payroll File"
+                onFileParsed={(rows) => {
+                    handlePayrollUpload(rows);
+                }}
+            />
+
 
       </div>
     
@@ -386,21 +493,71 @@ const MergeTableView = () => {
 
                 </div>
                 <div className="ActualTableWrapper">
-                    {processedGLogRef.current.length > 0 && (
+                    {payrollRows.length > 0 ? (
+                    <Box mt={4}>
+                        <div style={{ fontWeight: "bold", fontSize: "18px", marginBottom: "8px" }}>
+                        Payroll File Preview
+                        </div>
+                        <Table size="sm">
+                        <Thead bg="#A4B465">
+                            <Tr>
+                            <Th>Employee ID</Th>
+                            <Th>Last Name</Th>
+                            <Th>First Name</Th>
+                            <Th>Middle Name</Th>
+                            <Th>Position</Th>
+                            <Th>Monthly Pay</Th>
+                            <Th>Basic Pay</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {payrollRows.map((row, idx) => {
+                                const id = parseInt(row["ID"]);
+                                const nameParts = (row["NAME"] || "").split(", ");
+                                const lastName = nameParts[0]?.trim() || "";
+                                const rest = nameParts[1] || "";
+                                const nameWords = rest.trim().split(" ");
+                                const middleName = nameWords.pop() || "";
+                                const firstName = nameWords.join(" ");
+                                return (
+                                    <Tr
+                                    key={idx}
+                                    bg={idx % 2 === 0 ? "rgba(251, 252, 229, 0.93)" : "rgba(230, 226, 177, 0.93)"}
+                                    >
+                                    <Td style={{ color: existingPayrollIDs.includes(id) ? "red" : "inherit" }}>
+                                    {id}
+                                    {existingPayrollIDs.includes(id) && " ⚠️"}
+                                    </Td>
+                                    <Td>{lastName}</Td>
+                                    <Td>{firstName}</Td>
+                                    <Td>{middleName}</Td>
+                                    <Td>{row["POSITION"]}</Td>
+                                    <Td>{row["MONTHLY TOTAL PAY"]}</Td>
+                                    <Td>{row["BASIC PAY"]}</Td>
+                                    </Tr>
+                                );
+                            })}
+                        </Tbody>
+                        </Table>
+                    </Box>
+                    ) : processedGLogRef.current.length > 0 && (
                     <Box mt={4}>
                         <Table size="sm">
                         <Thead bg="#A4B465">
-                        <Tr>
+                            <Tr>
                             <Th>Employee ID</Th>
                             <Th>Last Name</Th>
                             <Th>First Name</Th>
                             <Th>Type</Th>
                             <Th>DateTime</Th>
-                        </Tr>
+                            </Tr>
                         </Thead>
                         <Tbody>
                             {processedGLogRef.current.map((entry, idx) => (
-                            <Tr key={idx} bg={idx % 2 === 0 ? "rgba(251, 252, 229, 0.93)" : "rgba(230, 226, 177, 0.93)"}>
+                            <Tr
+                                key={idx}
+                                bg={idx % 2 === 0 ? "rgba(251, 252, 229, 0.93)" : "rgba(230, 226, 177, 0.93)"}
+                            >
                                 <Td>{entry.employeeID}</Td>
                                 <Td>{entry.lastName}</Td>
                                 <Td>{entry.firstName}</Td>
@@ -413,6 +570,15 @@ const MergeTableView = () => {
                     </Box>
                     )}
                     <Flex justify="flex-end" mt={4}>
+                        {payrollRows.length > 0 ? (
+                        <Button
+                        colorScheme="green"
+                        onClick={handleUploadPayroll}
+                        isDisabled={payrollRows.length === 0 || existingPayrollIDs.length > 0}
+                        >
+                        Upload Payroll to Database
+                        </Button>
+                        ) : (
                         <Button
                             colorScheme="green"
                             onClick={handleUpload}
@@ -420,6 +586,7 @@ const MergeTableView = () => {
                         >
                             Upload to Database
                         </Button>
+                        )}
                     </Flex>
                 </div>
             </div>

@@ -31,9 +31,8 @@ const AttendanceEntrySchema: Schema<IAttendanceEntry> = new Schema({
   note: { type: String, required: false }
 });
 
-const AttendanceEntryModel = mongoose.model<IAttendanceEntry>(
-  "AttendanceEntry",
-  AttendanceEntrySchema
-);
+const AttendanceEntryModel =
+  mongoose.models.AttendanceEntry ||
+  mongoose.model<IAttendanceEntry>("AttendanceEntry", AttendanceEntrySchema);
 
 export default AttendanceEntryModel;
