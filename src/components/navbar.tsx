@@ -5,6 +5,8 @@ import styles from "./navbar.module.css";
 import { useDateTime } from './datetime';
 import { useDropdownLogic } from './dropdownlogic'; 
 import { dropdownItemsPerRoute } from "./navbarDropDownItems";
+import { Box } from "@chakra-ui/react";
+
 const Navbar = (): JSX.Element => {
   
   const dateTime = useDateTime();
@@ -12,6 +14,9 @@ const Navbar = (): JSX.Element => {
   const { isDropdownOpen, setIsDropdownOpen, dropdownRef,  toggleButtonRef } = useDropdownLogic();
   const [sortAsc, setSortAsc] = useState(true);
   const [filters, setFilters] = useState<Record<string, FilterValue>>({});
+  const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
 
   const [sortState, setSortState] = useState<{
     field: string;
@@ -70,6 +75,23 @@ const Navbar = (): JSX.Element => {
       },
     }));
   };
+
+  const fetchResults = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/employees/search?q=" + encodeURIComponent(query));
+      const data = await res.json();
+      setSearchResults(data || []);
+    } catch (err) {
+      console.error("Search failed:", err);
+      setSearchResults([]);
+    }
+  };
+
   
   //filter and sort button items
   const { pathname } = useRouter();
@@ -109,116 +131,58 @@ const Navbar = (): JSX.Element => {
   {
     /////////SEARCH BAR INPUT////////////
   }
-            <input 
-            id="SearchInput"
-            className={styles.inputareatextbox} 
-            type="text"
-            placeholder="Search..."
+            <input
+              id="SearchInput"
+              className={styles.inputareatextbox}
+              type="text"
+              placeholder="Search by name or ID..."
+              value={searchValue}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearchValue(val);
+                fetchResults(val);
+              }}
+              onFocus={() => setShowResults(true)}
+              onBlur={() => setTimeout(() => setShowResults(false), 150)} // delay for click
             />
-            {showDropdown && (
-            <div className={styles.filterbutton} ref={dropdownRef}>
-
-              
-              <button className={styles.img}  ref={toggleButtonRef}
-              onClick={() => setIsDropdownOpen(prev => !prev)}
+            {showResults && searchResults.length > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "48px",
+                  left: "0",
+                  right: "0",
+                  backgroundColor: "#FFFCD9",
+                  border: "1px solid #A4B465",
+                  zIndex: 999,
+                  maxHeight: "240px",
+                  overflowY: "auto",
+                  borderRadius: "4px",
+                  marginTop: "4px",
+                }}
               >
-                <img  alt="Vector" src="/Filterdropdown.png "/>
-              </button>
-              
-             <div
-                className={`${styles.dropdownMenu} ${isDropdownOpen ? styles.open : ''}`}
-                ref={dropdownRef}
-              >
-              {//DROPDOWN CONTENT IN DIV UNDER HERE
-              }
-              <div className={styles.dropdownContent}>
-                <div className={styles.FilterSide}>
-                  <div className={styles.FilterSideHeader}>
-                    {
-                      //FILTER HERE
-                    }
-                    Filter
-                  </div>
-                  {dropdownItems.filterItems.map((item, idx) => (
-                    
-                      //FILTER MAP HERE
-                    
-                    <div key={idx} className={styles.dropdownItem}>
-                      <label className={styles.dropdownLabel}>
-                        {item.label} {item.operator ?? ""}
-                      </label>
-                      {item.withInput && (
-                        <input
-            
-                          className={styles.dropdownInput}
-                          type={item.type === "number" ? "number" : "text"}
-                          placeholder={item.type === "number" ? "Enter number" : "Enter text"}
-                          value={filters[idx]?.value || ""}
-                          onChange={(e) => handleInputChange(idx,item.label, item.type, e.target.value)}
-                          onKeyDown={ShowItemAndValue}
-                          
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.SortSide}>
-                  <div className={styles.SortSideHeader}>
-                    {
-                      //SORT HERE
-                    }
-                    Sort
-                    <div className={styles.atoz}>
-                    <div>a</div>
-                    <div>z</div>
-                    </div>
-                    <button className={styles.sortbutton}
-                    onClick={() => {
-                      setSortAsc(prev => {
-                        const newState = !prev;
-                        setTimeout(() => { 
-                  //THE BUTTON FOR SORT ASCENDING AND DESCENDING just change the alert to the actual sort function
-                  //strict mode is active alert will happen twice in dev mode acc to gpt
-                          alert(newState ? "Ascending" : "Descending");
-                        }, 100);
-                        return newState;
-                      });
+                {searchResults.map((emp, i) => (
+                  <div
+                    key={i}
+                    onMouseDown={() => {
+                      router.push(`/employeeprofile/${emp.employeeID}`);
+                      setSearchValue("");
+                      setSearchResults([]);
                     }}
-                    >
-                      <Image
-                      className={`${styles.sortbtnreal} ${sortAsc ? styles.up : styles.down}`}
-                      alt="sort btn" 
-                      src="/tabler_arrow-up.png"
-                      width={25}
-                      height={25}
-                       />
-                    </button>
+                    style={{
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      borderBottom: i !== searchResults.length - 1 ? "1px solid #E0E0B0" : "none",
+                      backgroundColor: "#FFFCD9",
+                      color: "#3C5E12",
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#F6F4CF")}
+                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#FFFCD9")}
+                  >
+                    {emp.lastName}, {emp.firstName} — ID: {emp.employeeID}
                   </div>
-                  {
-                    //SORT ITEM MAP HERE
-                  }
-                  {dropdownItems.sortItems.map((item, idx) => (
-                    <div key={idx} 
-                    className={`${styles.dropdownItem} ${
-                      sortState?.field === item ? styles.activeSortItem : ""
-                    }`}
-                    onClick={() => {
-                        const direction = sortAsc ? "asc" : "desc";
-                        setSortState({ field: item, direction });
-                        //
-                        alert("check console for correct SORT")
-                        console.log("Sort by:", item, "Order:", direction);
-                      }}
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
-            </div>
-            
-            
-            </div>
             )}
           </div>
 
