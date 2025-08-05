@@ -796,19 +796,21 @@ useEffect(() => {
                   }
 
                   const csvRows = [
-                    ["Date", "In Time", "Out Time", "PTO Date", "Credited"],
+                    ["Date", "In Time", "Out Time", "Notes", "PTO Date", "Credited"],
                     ...dateList.map(date => {
-                      const att = attendanceData.find(a => a.date === date);
-                      const fullPto = ptoData.find(p => p.date === date && p.credited === 1); // For PTO override
-                      const anyPto = ptoData.find(p => p.date === date); // For PTO Date / Credited columns
-                      return [
-                        date,
-                        fullPto ? "PTO" : att?.inTime ?? "-",
-                        fullPto ? "PTO" : att?.outTime ?? "-",
-                        anyPto?.date ?? "",
-                        anyPto?.credited?.toString() ?? ""
-                      ];
-                    })
+                    const att = attendanceData.find(a => a.date === date);
+                    const fullPto = ptoData.find(p => p.date === date && p.credited === 1);
+                    const anyPto = ptoData.find(p => p.date === date);
+
+                    return [
+                      date,
+                      fullPto ? "PTO" : att?.inTime ?? "-",
+                      fullPto ? "PTO" : att?.outTime ?? "-",
+                      att?.note ?? "",
+                      anyPto?.date ?? "",
+                      anyPto?.credited?.toString() ?? ""
+                    ];
+                  })
                   ];
 
                   const csvContent = csvRows.map(row =>

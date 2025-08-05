@@ -156,19 +156,30 @@ const AttendanceTableView = () => {
     return () => window.removeEventListener("mousedown", handleClick);
   }, [contextMenu]);
 
-  const handleUpdateLog = () => {
-    if (!newLog.note.trim()) {
-      alert("Note cannot be empty.");
-      return;
-    }
+  const handleUpdateLog = async () => {
+    try {
+      const res = await fetch("/api/attendance/updateNote", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: newLog._id,
+          note: newLog.note,
+        }),
+      });
 
-    const updatedLogs = logs.map((log, i) =>
-      i === contextMenu?.row ? { ...log, note: newLog.note } : log
-    );
-    setLogs(updatedLogs);
-    setIsEditing(false);
-    onClose();
-    setContextMenu(null);
+      if (!res.ok) throw new Error("Failed to update note");
+
+      const updatedLogs = logs.map((log) =>
+        log._id === newLog._id ? { ...log, note: newLog.note } : log
+      );
+      setLogs(updatedLogs);
+      setIsEditing(false);
+      onClose();
+      setContextMenu(null);
+    } catch (err) {
+      console.error("Failed to update attendance note:", err);
+      alert("Failed to update note.");
+    }
   };
 
   const handleDeleteLog = async () => {
