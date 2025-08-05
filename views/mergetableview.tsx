@@ -15,12 +15,12 @@ interface MergedAttendanceEntry {
   employeeID: number;
   lastName: string;
   firstName: string;
+  middleName?: string;
   datetime: string;
   type: "Check In" | "Check Out" | "Incomplete";
   source: "GLog" | "GDoc";
   note?: string;
 }
-
 
 const MergeTableView = () => {
     const [gdocData, setGdocData] = useState<any[]>([]);
@@ -122,50 +122,97 @@ const MergeTableView = () => {
             headers: { "Content-Type": "application/json" },
         }).then((res) => res.json()).catch(() => []);
 
+        const usedIDs = new Set(employees.map((e: any) => e.employeeID));
+        let tempCounter = 1;
+
+        const getNextEmployeeID = () => {
+        while (usedIDs.has(tempCounter)) tempCounter++;
+        const newId = tempCounter;
+        usedIDs.add(newId);
+        return parseInt(newId.toString().padStart(9, "0"));
+        };
+
         const employeeMapByFullName = new Map<string, any>();
         employees.forEach((emp: any) => {
             const fullName = `${emp.lastName}, ${emp.firstName} ${emp.middleName || ""}`
-                .replace(/\s+/g, " ")
-                .replace(/["']/g, "")
-                .replace(/\.+$/, "")
-                .toLowerCase()
-                .trim();
-            employeeMapByFullName.set(fullName.toLowerCase(), emp);
-        });
-
-        for (const row of rows) {
-            const fullNameRaw = row["NAME OF EMPLOYEE"]?.trim() || "";
-            const fullName = fullNameRaw
             .replace(/\s+/g, " ")
             .replace(/["']/g, "")
             .replace(/\.+$/, "")
             .toLowerCase()
             .trim();
+            employeeMapByFullName.set(fullName, emp);
+        });
+
+        // Step 1: Group entries by name + date
+        const grouped: { [key: string]: any[] } = {};
+
+        for (const row of rows) {
+            const fullNameRaw = row["NAME OF EMPLOYEE"]?.trim() || "";
+            const fullNameKey = fullNameRaw
+            .replace(/\s+/g, " ")
+            .replace(/["']/g, "")
+            .replace(/\.+$/, "")
+            .toLowerCase()
+            .trim();
+
             const timestamp = new Date(row["TIMESTAMP"]);
             const action = row["ACTION"]?.toLowerCase();
             const note = row["NOTE"] || "";
 
-            if (!timestamp || isNaN(timestamp.getTime()) || !employeeMapByFullName.has(fullName)) {
-            console.warn("Skipping unmatched or invalid row:", row);
+            if (!timestamp || isNaN(timestamp.getTime())) {
+            console.warn("Skipping row with invalid timestamp:", row);
             continue;
             }
 
-            const emp = employeeMapByFullName.get(fullName);
-            const type = action === "clock in" ? "Check In" : action === "clock out" ? "Check Out" : "Incomplete";
+            const dateKey = `${fullNameKey}_${timestamp.toDateString()}`;
 
-            result.push({
-            employeeID: emp.employeeID,
-            firstName: emp.firstName,
-            lastName: emp.lastName,
-            datetime: timestamp.toISOString(),
-            type,
-            source: "GDoc",
+            if (!grouped[dateKey]) grouped[dateKey] = [];
+
+            grouped[dateKey].push({
+            fullNameRaw,
+            fullNameKey,
+            timestamp,
+            action,
             note,
             });
         }
 
+        for (const entries of Object.values(grouped)) {
+            entries.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+            const rawName = entries[0].fullNameRaw;
+            const [last, rest] = rawName.split(",").map((s: string) => s.trim());
+            const restParts = (rest || "").split(" ");
+            const firstName = restParts[0] || "N/A";
+            const middleName = restParts.slice(1).join(" ") || "";
+            const lastName = last || "N/A";
+
+            const matchedEmp = employeeMapByFullName.get(entries[0].fullNameKey);
+            const employeeID = matchedEmp?.employeeID ?? getNextEmployeeID();
+
+            const pushEntry = (timestamp: Date, type: "Check In" | "Check Out" | "Incomplete", note: string) => {
+            result.push({
+                employeeID,
+                firstName,
+                lastName,
+                middleName,
+                datetime: timestamp.toISOString(),
+                type,
+                source: "GDoc",
+                note,
+            });
+            };
+
+            if (entries.length === 1) {
+            pushEntry(entries[0].timestamp, "Incomplete", entries[0].note);
+            } else {
+            pushEntry(entries[0].timestamp, "Check In", entries[0].note);
+            pushEntry(entries[1].timestamp, "Check Out", entries[1].note);
+            }
+        }
+
         return result;
-        };
+    };
 
     const handleUpload = async () => {
         if (processedGLogRef.current.length === 0) {
@@ -202,9 +249,11 @@ const MergeTableView = () => {
     const FileUploadButton = ({
         label,
         onFileParsed,
+        source,
         }: {
         label: string;
         onFileParsed: (rows: any[]) => void;
+        source: "GLog" | "GDoc";
         }) => {
         const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -213,7 +262,7 @@ const MergeTableView = () => {
             if (!file) return;
 
             const text = await file.text();
-            const rows = parseCSVManually(text);
+            const rows = source === "GDoc" ? parseGDocCSV(text) : parseCSVManually(text);
             onFileParsed(rows);
         };
 
@@ -233,6 +282,41 @@ const MergeTableView = () => {
             }).filter(Boolean);
         };
 
+        const parseGDocCSV = (text: string) => {
+            const normalizedText = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+            const delimiter = normalizedText.includes("\t") ? "\t" : ",";
+
+            const [headerLine, ...lines] = normalizedText.split("\n").filter(Boolean);
+            const headers = headerLine.split(delimiter).map((h) => h.trim().toUpperCase());
+
+            const getIndex = (label: string) =>
+                headers.findIndex((h) => h === label.toUpperCase());
+
+            const timestampIndex = getIndex("TIMESTAMP");
+            const nameIndex = getIndex("NAME OF EMPLOYEE");
+            const actionIndex = getIndex("ACTION");
+            const noteIndex = getIndex("NOTE");
+
+            return lines.map((line) => {
+                const values = line.match(/(".*?"|[^",\t\n\r]+)(?=\s*,|\s*$)/g)?.map((val) =>
+                val.replace(/^"|"$/g, "").trim()
+                ) || [];
+
+                if (
+                [timestampIndex, nameIndex, actionIndex, noteIndex].some((i) => i === -1) ||
+                values.length < Math.max(timestampIndex, nameIndex, actionIndex, noteIndex)
+                ) {
+                return null;
+                }
+
+                return {
+                TIMESTAMP: values[timestampIndex],
+                "NAME OF EMPLOYEE": values[nameIndex],
+                ACTION: values[actionIndex],
+                NOTE: values[noteIndex],
+                };
+            }).filter(Boolean);
+        };
 
         return (
             <div className="FileUploadContainer">
@@ -259,6 +343,7 @@ const MergeTableView = () => {
             <div className="GlogWrapper">
                <FileUploadButton
                     label="Upload GLog"
+                    source="GLog"
                     onFileParsed={(rows) => {
                         processGLogData(rows).then((processed) => {
                         processedGLogRef.current = processed;
@@ -272,6 +357,7 @@ const MergeTableView = () => {
 
             <FileUploadButton
                 label="Upload GDoc"
+                source="GDoc"
                 onFileParsed={(rows) => {
                     processGDocData(rows).then((processed) => {
                     processedGLogRef.current = processed;
