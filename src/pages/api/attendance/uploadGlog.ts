@@ -18,6 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get all current employee IDs
     const existingEmployees = await Employee.find({}, 'employeeID firstName lastName middleName');
     const usedIds = new Set(existingEmployees.map(e => e.employeeID));
+    const createdEmployeeIDs = new Set<number>();
 
     for (const entry of entries) {
       const { lastName, firstName, middleName = "" } = entry;
@@ -30,25 +31,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       let employee = matchedEmployee;
 
-      // 👤 If not found, create a new employee with generated ID
+      // If not found, create a new employee with generated ID
       if (!employee) {
-        employee = await Employee.create({
-          employeeID: entry.employeeID,
-          lastName: lastName || "N/A",
-          firstName: firstName || "N/A",
-          middleName: middleName || "",
-          department: "N/A",
-          coordinator: false,
-          position: "N/A",
-          contactInfo: "09123456789",
-          email: "employee@gmail.com",
-          totalSalary: 0,
-          basicSalary: 0,
-          birthdate: "",
-          numberOfPTOs: 0,
-          remarks: "",
-        });
+        // Prevent duplicate creation within the same batch
+        if (!createdEmployeeIDs.has(entry.employeeID)) {
+          employee = await Employee.create({
+            employeeID: entry.employeeID, // Use the given ID from GLog
+            lastName: lastName || "N/A",
+            firstName: firstName || "N/A",
+            middleName: middleName || "",
+            department: "N/A",
+            coordinator: false,
+            position: "N/A",
+            contactInfo: "09123456789",
+            email: "employee@gmail.com",
+            totalSalary: 0,
+            basicSalary: 0,
+            birthdate: "",
+            numberOfPTOs: 0,
+            remarks: "",
+          });
+          createdEmployeeIDs.add(entry.employeeID);
+        } else {
+          // If already created during this batch, retrieve it again
+          employee = await Employee.findOne({ employeeID: entry.employeeID });
+        }
       }
+
 
       await AttendanceEntryModel.create({
         datetime: entry.datetime,
