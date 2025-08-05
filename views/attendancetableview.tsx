@@ -108,7 +108,7 @@ const AttendanceTableView = () => {
         const res = await fetch("/api/attendance/all");
         const data = await res.json();
 
-        console.log("📦 Raw attendance entries from DB:", data);
+        console.log("Raw attendance entries from DB:", data);
 
         if (!Array.isArray(data)) {
           console.error("Invalid response for attendance:", data);

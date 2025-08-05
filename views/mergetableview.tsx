@@ -249,7 +249,6 @@ const MergeTableView = () => {
     };
 
     const handlePayrollUpload = async (rows: any[]) => {
-    console.log("📄 Parsed Payroll CSV rows:", rows);
     processedGLogRef.current = [];
     setPayrollRows(rows);
 
@@ -307,10 +306,10 @@ const MergeTableView = () => {
             });
 
             if (!res.ok) {
-                console.error("❌ Failed to add:", newEmployee);
+                console.error("Failed to add:", newEmployee);
             }
             } catch (err) {
-            console.error("❌ Upload error:", err);
+            console.error("Upload error:", err);
             }
         }
 
@@ -446,8 +445,6 @@ const MergeTableView = () => {
                         processGLogData(rows).then((processed) => {
                         processedGLogRef.current = processed;
                         setGlogData(rows);
-                        console.log("📄 Parsed GLog CSV rows:", rows);
-                        console.log("🧠 Processed entries with employee info:", processed);
                         });
                     }}
                 />
@@ -461,8 +458,6 @@ const MergeTableView = () => {
                     processGDocData(rows).then((processed) => {
                     processedGLogRef.current = processed;
                     setGdocData(rows);
-                    console.log("📄 Parsed GDoc rows:", rows);
-                    console.log("🧠 Processed GDoc entries:", processed);
                     });
                 }}
             />
