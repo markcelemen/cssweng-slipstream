@@ -41,28 +41,10 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
   const toast = useToast();
   const [prevID, setPrevID] = useState<number | null>(null);
   const [nextID, setNextID] = useState<number | null>(null);
-    const attendanceData = [
-    { date: "Monday, 14 April 2025", inTime: "8:00AM", outTime: "5:00PM" },
-    { date: "Tuesday, 15 April 2025", inTime: "7:45AM", outTime: "4:30PM" },
-    { date: "Wednesday, 16 April 2025", inTime: "7:50AM", outTime: "4:45PM" },
-    { date: "Thursday, 17 April 2025", inTime: "8:10AM", outTime: "5:00PM" },
-    { date: "Friday, 18 April 2025", inTime: "7:40AM", outTime: "4:35PM" },
-    { date: "Monday, 21 April 2025", inTime: "8:00AM", outTime: "5:00PM" },
-    { date: "Tuesday, 22 April 2025", inTime: "7:55AM", outTime: "4:50PM" },
-    { date: "Wednesday, 23 April 2025", inTime: "8:05AM", outTime: "5:05PM" },
-    { date: "Thursday, 24 April 2025", inTime: "7:35AM", outTime: "4:25PM" },
-    { date: "Friday, 25 April 2025", inTime: "8:00AM", outTime: "5:00PM" },
-    { date: "Monday, 14 April 2025", inTime: "8:00AM", outTime: "5:00PM" },
-    { date: "Tuesday, 15 April 2025", inTime: "7:45AM", outTime: "4:30PM" },
-    { date: "Wednesday, 16 April 2025", inTime: "7:50AM", outTime: "4:45PM" },
-    { date: "Thursday, 17 April 2025", inTime: "8:10AM", outTime: "5:00PM" },
-    { date: "Friday, 18 April 2025", inTime: "7:40AM", outTime: "4:35PM" },
-    { date: "Monday, 21 April 2025", inTime: "8:00AM", outTime: "5:00PM" },
-    { date: "Tuesday, 22 April 2025", inTime: "7:55AM", outTime: "4:50PM" },
-    { date: "Wednesday, 23 April 2025", inTime: "8:05AM", outTime: "5:05PM" },
-    { date: "Thursday, 24 April 2025", inTime: "7:35AM", outTime: "4:25PM" },
-    { date: "Friday, 25 April 2025", inTime: "8:00AM", outTime: "5:00PM" },
-    ];
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; date: string } | null>(null);
+  const [ptoContextMenu, setPtoContextMenu] = useState<{ x: number; y: number; date: string } | null>(null);
+  const [attendanceData, setAttendanceData] = useState<{ date: string; inTime: string; outTime: string }[]>([]);
+
 
     const ptoData = [
     { date: "Wednesday, 16 April 2025", credited: 0.5 },
@@ -78,7 +60,24 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
     ];
 
 
-  
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const menu1 = document.getElementById("attendance-context-menu");
+      const menu2 = document.getElementById("pto-context-menu");
+
+      const clickedInsideMenu1 = menu1 && menu1.contains(e.target as Node);
+      const clickedInsideMenu2 = menu2 && menu2.contains(e.target as Node);
+
+      // Only close menus if it's a left-click and click was outside both menus
+      if (e.button === 0 && !clickedInsideMenu1 && !clickedInsideMenu2) {
+        setContextMenu(null);
+        setPtoContextMenu(null);
+      }
+    };
+
+    window.addEventListener("mousedown", handleClick);
+    return () => window.removeEventListener("mousedown", handleClick);
+  }, [contextMenu, ptoContextMenu]);
 
   useEffect(() => {
   fetch(`/api/employees/${id}`)
@@ -100,6 +99,56 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
       setPrevID(prev);
       setNextID(next);
     });
+
+  fetch(`/api/attendance/employee/${id}`)
+    .then((res) => res.json())
+    .then((logs) => {
+
+      const grouped = new Map<string, { inTime?: string; outTime?: string }>();
+
+      logs.forEach((entry: any) => {
+        const dt = new Date(entry.datetime);
+        const type = (entry.type || "").toLowerCase().trim();
+        const dateStr = dt.toLocaleDateString("en-PH", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          timeZone: "Asia/Manila",
+        });
+
+        const timeStr = dt.toLocaleTimeString("en-PH", {
+          hour: "numeric",
+          minute: "2-digit",
+          timeZone: "Asia/Manila",
+        });
+        
+        if (!grouped.has(dateStr)) grouped.set(dateStr, {});
+        const record = grouped.get(dateStr)!;
+        if ((type === "check in" || type === "incomplete") && !record.inTime) {
+          record.inTime = timeStr;
+        }
+
+        if (type === "check out") {
+          record.outTime = timeStr;
+        }
+
+        if (type === "incomplete" && !record.outTime) {
+          record.outTime = "Incomplete";
+        }
+      });
+
+      const formatted = Array.from(grouped.entries()).map(([date, times]) => ({
+        date,
+        inTime: times.inTime || "-",
+        outTime: times.outTime || "-",
+      }));
+
+      setAttendanceData(formatted);
+    })
+    .catch(err => {
+      console.error("Failed to fetch attendance for employee:", err);
+  });
 }, [id]);
 
 
@@ -315,7 +364,7 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
             {/* Left scrollable section */}
             <Box flex="4" overflowY="auto">
                 {attendanceData.map((record, index) => (
-                <HStack
+                  <HStack
                     key={index}
                     px="4"
                     py="2"
@@ -323,18 +372,24 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
                     borderBottom="1px solid #E0E0B0"
                     fontSize="sm"
                     spacing="0"
-                >
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setPtoContextMenu(null);
+                      setContextMenu({ x: e.clientX, y: e.clientY, date: record.date });
+                    }}
+                    _hover={{ bg: "#FFD566", cursor: "pointer" }}
+                  >
                     <Box flex="2" px="2">{record.date}</Box>
                     <Box flex="1" px="2">{record.inTime}</Box>
                     <Box flex="1" px="2">{record.outTime}</Box>
-                </HStack>
+                  </HStack>
                 ))}
             </Box>
 
             {/* Right scrollable section */}
             <Box flex="3" overflowY="auto" borderLeft="2px solid #4A6100">
                 {ptoData.map((pto, index) => (
-                <HStack
+                  <HStack
                     key={index}
                     px="4"
                     py="2"
@@ -342,10 +397,16 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
                     borderBottom="1px solid #E0E0B0"
                     fontSize="sm"
                     spacing="0"
-                >
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setContextMenu(null);
+                      setPtoContextMenu({ x: e.clientX, y: e.clientY, date: pto.date });
+                    }}
+                    _hover={{ bg: "#FFD566", cursor: "pointer" }}
+                  >
                     <Box flex="2" px="2">{pto.date}</Box>
                     <Box flex="1" px="2">{pto.credited}</Box>
-                </HStack>
+                  </HStack>
                 ))}
             </Box>
             </Flex>
@@ -394,6 +455,61 @@ const AttendanceDetailsView: React.FC<{ id: string }> = ({ id }) => {
             </HStack>
 
         </Box>
+        {contextMenu && (
+          <Box
+            id="attendance-context-menu"
+            position="fixed"
+            top={contextMenu.y}
+            left={contextMenu.x}
+            zIndex={9999}
+            bg="#FFD566"
+            borderRadius="md"
+            boxShadow="md"
+            p={2}
+            minW="180px"
+          >
+            <VStack spacing={2}>
+              <Button
+                size="sm"
+                w="100%"
+                onClick={() => {
+                  alert(`Add PTO on ${contextMenu.date}`);
+                  setContextMenu(null);
+                }}
+              >
+                Add PTO on this date
+              </Button>
+            </VStack>
+          </Box>
+        )}
+        {ptoContextMenu && (
+          <Box
+            id="pto-context-menu"
+            position="fixed"
+            top={ptoContextMenu.y}
+            left={ptoContextMenu.x}
+            zIndex={9999}
+            bg="#FFD566"
+            borderRadius="md"
+            boxShadow="md"
+            p={2}
+            minW="180px"
+          >
+            <VStack spacing={2}>
+              <Button
+                size="sm"
+                w="100%"
+                colorScheme="red"
+                onClick={() => {
+                  alert(`Remove PTO on ${ptoContextMenu.date}`);
+                  setPtoContextMenu(null);
+                }}
+              >
+                Remove PTO on this date
+              </Button>
+            </VStack>
+          </Box>
+        )}
       </Flex>
     </Box>
   );
