@@ -60,6 +60,8 @@ describe('parseCSV', () => {
     const mockNormalized: AttendanceEntry[] = [{
         employeeID: 1001,
         employeeName: 'Speedwagon',
+        lastName: 'Speedwagon',
+        firstName: '',
         datetime: new Date('2025-08-01T08:00:00'),
         remarks: 'IN',
         lateDeduct: 0,
@@ -113,6 +115,8 @@ describe('parseCSV (GForm)', () => {
     const mockNormalized: AttendanceEntry[] = [{
       employeeID: 1002,
       employeeName: 'Jonathan Joestar',
+      lastName: 'Joestar',
+      firstName: 'Jonathan',
       remarks: 'IN',
       datetime: new Date('2025-08-01 08:01:00'),
       lateDeduct: 0,
