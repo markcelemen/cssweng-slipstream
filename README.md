@@ -8,20 +8,20 @@ npm run dev
 
 Scrum Master — Mark Celemen
 
-Product Owner - John Rovere Iral II
+Product Owner — John Rovere Iral II
 
 Developers
 
-- Ronnie Abiog Jr.
+— Ronnie Abiog Jr.
 
-- Dominic Joel Gomez
+— Dominic Joel Gomez
 
 
 Designers
 
-- Mark Raphael Daming
+— Mark Raphael Daming
 
-- Karl Nico Diego
+— Karl Nico Diego
 
 
-QA - Lance Jacob Ferrer
+QA — Lance Jacob Ferrer
