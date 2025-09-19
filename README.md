@@ -3,8 +3,6 @@
 **Workforce Management System for Bloomingfield Academy**  
 SlipStream is a workforce management platform designed to automate employee record management and time slip processing. By centralizing HR workflows—attendance, payroll deductions, leave tracking, and pay slip distribution—it reduces manual work, minimizes errors, and streamlines HR operations.  
 
----
-
 ## Features  
 
 - **User Authentication** – Secure login and account access for HR officers.  
@@ -15,16 +13,12 @@ SlipStream is a workforce management platform designed to automate employee reco
 - **Automated Email Campaigns** – Schedule and send attendance summaries and pay slips to employees.  
 - **Attendance File Merge** – Consolidate multiple attendance files into one centralized database.  
 
----
-
 ## Tech Stack  
 
-- **Frontend:** React, Bootstrap, TypeScript  
+- **Frontend:** React, TypeScript  
 - **Backend:** Node.js, Express, REST APIs  
 - **Database:** MongoDB  
 - **Other Tools:** Git, Figma, Jira  
-
----
 
 ## Installation  
 
@@ -49,10 +43,10 @@ The app will be available at `http://localhost:3000`
 1. Launch the application with `npm run dev`.
 2. Open `http://localhost:3000` in your browser.
 3. Log in as an HR Officer to access SlipStream’s features:
-  - Manage attendance and employee records.
-  - Track PTO balances.
-  - Automate email distribution of attendance and pay slips.
-  - Merge attendance files into a centralized database.
+    - Manage attendance and employee records.
+    - Track PTO balances.
+    - Automate email distribution of attendance and pay slips.
+    - Merge attendance files into a centralized database.
 
 ## Team
 - Scrum Master: Mark Celemen
