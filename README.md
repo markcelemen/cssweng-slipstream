@@ -43,10 +43,10 @@ The app will be available at `http://localhost:3000`
 1. Launch the application with `npm run dev`.
 2. Open `http://localhost:3000` in your browser.
 3. Log in as an HR Officer to access SlipStream’s features:
-    - Manage attendance and employee records.
-    - Track PTO balances.
-    - Automate email distribution of attendance and pay slips.
-    - Merge attendance files into a centralized database.
+  - Manage attendance and employee records.  
+  - Track PTO balances.  
+  - Automate email distribution of attendance and pay slips.  
+  - Merge attendance files into a centralized database.  
 
 ## 👥 Team
 
