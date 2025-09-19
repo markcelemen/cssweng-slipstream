@@ -53,5 +53,5 @@ The app will be available at `http://localhost:3000`
 🧑‍💻 **Scrum Master**: Mark Celemen  
 🧑‍💻 **Product Owner**: John Rovere Iral II  
 🧑‍💻 **Backend Developers**: Ronnie Abiog Jr., Dominic Joel Gomez  
-🧑‍💻 **Frontend Developers**: Mark Raphael Daming, Karl Nico Diego  
+🧑‍💻 **Frontend Developers**: Mark Raphael Daming, Karl Nico Diego, Henzley Emmanuel Young  
 🧑‍💻 **QA**: Lance Jacob Ferrer  
