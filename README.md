@@ -24,8 +24,8 @@ SlipStream is a workforce management platform designed to automate employee reco
 
 1. Clone the repository:  
    ```bash
-   git clone https://github.com/yourusername/slipstream.git
-   cd slipstream
+   git clone https://github.com/yourusername/cssweng-slipstream.git
+   cd cssweng-slipstream
    ```
 2. Install dependencies:
    ```bash
@@ -50,7 +50,11 @@ The app will be available at `http://localhost:3000`
 
 ## 👥 Team
 🧑‍💻 **Scrum Master**: Mark Celemen
+
 🧑‍💻 **Product Owner**: John Rovere Iral II
+
 🧑‍💻 **Backend Developers**: Ronnie Abiog Jr., Dominic Joel Gomez
+
 🧑‍💻 **Frontend Developers**: Mark Raphael Daming, Karl Nico Diego
+
 🧑‍💻 **QA**: Lance Jacob Ferrer
