@@ -6,7 +6,7 @@ SlipStream is a workforce management platform designed to automate employee reco
 ## 🚀 Features  
 
 🔐 **User Authentication** – Secure login and account access for HR officers.  
-⏱️ **Attendance Management** – CRUD operations on employee attendance records to ensure accurate payroll and reporting.  
+⏱️ **Attendance Management** – CRUD operations on employee attendance records.  
 📋 **Employee Records** – View and manage employee information to maintain accurate records.  
 🏖️ **Paid Time Off Tracking** – Monitor and update employee PTO balances.  
 🧑‍💼 **Profile Management** – CRUD operations on employee profiles for up-to-date information.  
@@ -50,8 +50,8 @@ The app will be available at `http://localhost:3000`
 
 ## 👥 Team
 
-🧑‍💻 **Scrum Master**: Mark Celemen
-🧑‍💻 **Product Owner**: John Rovere Iral II
-🧑‍💻 **Backend Developers**: Ronnie Abiog Jr., Dominic Joel Gomez
-🧑‍💻 **Frontend Developers**: Mark Raphael Daming, Karl Nico Diego
-🧑‍💻 **QA**: Lance Jacob Ferrer
+🧑‍💻 **Scrum Master**: Mark Celemen  
+🧑‍💻 **Product Owner**: John Rovere Iral II  
+🧑‍💻 **Backend Developers**: Ronnie Abiog Jr., Dominic Joel Gomez  
+🧑‍💻 **Frontend Developers**: Mark Raphael Daming, Karl Nico Diego  
+🧑‍💻 **QA**: Lance Jacob Ferrer  
