@@ -15,7 +15,7 @@ SlipStream is a workforce management platform designed to automate employee reco
 
 ## 🛠️ Tech Stack  
 
-🎨 **Frontend:** React, TypeScript, JavaScript 
+🎨 **Frontend:** React, TypeScript, JavaScript  
 ⚙️ **Backend:** Node.js, Express, JavaScript, REST APIs  
 🗄️ **Database:** MongoDB  
 🔨 **Other Tools:** Git, Figma, Jira  
