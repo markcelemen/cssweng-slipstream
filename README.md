@@ -24,7 +24,7 @@ SlipStream is a workforce management platform designed to automate employee reco
 
 1. Clone the repository:  
    ```bash
-   git clone https://github.com/yourusername/cssweng-slipstream.git
+   git clone https://github.com/markcelemen/cssweng-slipstream.git
    cd cssweng-slipstream
    ```
 2. Install dependencies:
