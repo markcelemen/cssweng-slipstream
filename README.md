@@ -1,7 +1,7 @@
 # SlipStream ⚡️💼
 
 **Workforce Management System for Bloomingfield Academy**  
-SlipStream is a workforce management platform designed to automate employee record management and time slip processing. By centralizing HR workflows—attendance, payroll deductions, leave tracking, and pay slip distribution—it reduces manual work, minimizes errors, and streamlines HR operations.  
+SlipStream is a workforce management platform designed to automate employee record management and time slip processing. By centralizing HR workflows, such as attendance, payroll deductions, leave tracking, and pay slip distribution, it reduces manual work, minimizes errors, and streamlines HR operations.  
 
 ## 🚀 Features  
 
